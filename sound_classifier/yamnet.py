@@ -4,15 +4,14 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Model, Sequential, layers
 from tensorflow_addons.optimizers import RectifiedAdam
+from tensorflow_addons.metrics import MultiLabelConfusionMatrix
 from matplotlib import pyplot as plt
-import pandas as pd
 from importlib import import_module
+import math
 
 class YAMNet(SoundClassifier):
     def __init__(self, params_path) -> None:
         self.params = import_module(params_path)
-        self.classes = pd.read_csv(self.params.CLASSES, index_col="index").\
-            sort_values("index")
         self._YAMNET_LAYER_DEFS = [
             # (layer_function, kernel, stride, num_filters)
             (self._conv,          [3, 3], 2,   32),
@@ -32,10 +31,8 @@ class YAMNet(SoundClassifier):
         ]
         
         # Loading audio and converting it to Log-Mel Spectrogram
-        waveform = layers.Input(batch_shape=(1, None))
+        waveform = layers.Input(shape = (math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)))
         spec = self.features(waveform)
-        s = spec.shape
-        spec = tf.reshape(spec, [-1, s[-2], s[-1]])
         # Extracting features
         h = layers.Reshape(
             (self.params.PATCH_FRAMES, self.params.PATCH_BANDS, 1),
@@ -43,8 +40,8 @@ class YAMNet(SoundClassifier):
         )(spec)
         for (i, (layer_fun, kernel, stride, filters)) in enumerate(self._YAMNET_LAYER_DEFS):
             h = layer_fun('layer{}'.format(i + 1), kernel, stride, filters)(h)
-        h = layers.GlobalAveragePooling2D()(h)
-        h = tf.reshape(h, [-1, self.params.NUM_PATCH, h.shape[-1]])
+        #h = layers.GlobalAveragePooling2D()(h)
+        h = layers.GlobalMaxPooling2D()(h)
         self.model_base = Model(name = "yamnet_base", inputs = waveform, outputs = h)
         self.model = Sequential([
             self.model_base,
@@ -52,17 +49,14 @@ class YAMNet(SoundClassifier):
             layers.Activation(
                 name=self.params.EXAMPLE_PREDICTIONS_LAYER_NAME,
                 activation=self.params.CLASSIFIER_ACTIVATION
-            ),
-            layers.GlobalMaxPooling1D()
+            )
         ])
         
     def features(self, waveform):
         spec = log_mel_spec(waveform, self.params.SAMPLE_RATE, self.params.STFT_WINDOW_SECONDS, \
                 self.params.STFT_HOP_SECONDS, self.params.MEL_BANDS, self.params.MEL_MIN_HZ, self.params.MEL_MAX_HZ, \
                 self.params.LOG_OFFSET)
-        patch = spectrogram_to_patches(spec, self.params.SAMPLE_RATE, self.params.STFT_HOP_SECONDS, \
-                self.params.PATCH_WINDOW_SECONDS, self.params.PATCH_HOP_SECONDS)
-        return patch
+        return spec
     
     def _batch_norm(self, name):
         def _bn_layer(layer_input):
@@ -115,14 +109,15 @@ class YAMNet(SoundClassifier):
             lr = 1e-3
             self.model_base.trainable = True
         else:
-            lr = 1e-3
+            lr = 5e-4
             self.model_base.trainable = False
         
         rmse = tf.keras.metrics.RootMeanSquaredError()
+        auc = tf.keras.metrics.AUC(curve = "PR", multi_label = True)
         self.model.compile(
-            loss=tf.keras.losses.MeanSquaredError(),
+            loss=tf.keras.losses.BinaryCrossentropy(),
             optimizer=RectifiedAdam(lr),
-            metrics=[rmse]
+            metrics=[rmse, auc]
         )
         
         callback = tf.keras.callbacks.EarlyStopping(
@@ -138,6 +133,22 @@ class YAMNet(SoundClassifier):
         )
         return history
     
+    def evaluate(self, dataset, threshold = 0.5):
+        conf = MultiLabelConfusionMatrix(self.params.NUM_CLASSES, dtype = tf.int32)
+        y_pred = []
+        y_true = []
+        for a, l in dataset:
+            y_pred.append(self.predict(a))
+            y_true.append(l)
+        y_pred = tf.concat(y_pred, 0).numpy()
+        y_true = tf.concat(y_true, 0).numpy()
+        y_pred[y_pred > threshold] = 1
+        y_true[y_true > threshold] = 1
+        y_pred[y_pred != 1] = 0
+        y_true[y_true != 1] = 0
+        conf.update_state(y_true.astype(int), y_pred.astype(int))
+        return conf.result().numpy()
+        
     def plot(self, waveform, show = True):
         plt.figure(figsize=(10, 6))
         # Plot the waveform.

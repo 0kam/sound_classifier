@@ -1,8 +1,6 @@
 import numpy as np
 import tensorflow as tf
 
-
-
 def log_mel_spec(waveform:tf.Tensor, rate:int=16000, \
         stft_win_sec:float=0.025, stft_hop_sec:float=0.010, \
         mel_bands:int=64, mel_min_hz:int=125, mel_max_hz:int=7500, \
@@ -48,7 +46,8 @@ def log_mel_spec(waveform:tf.Tensor, rate:int=16000, \
             signals=waveform,
             frame_length=window_length_samples,
             frame_step=hop_length_samples,
-            fft_length=fft_length
+            fft_length=fft_length,
+            pad_end = True
         ))
         # magnitude_spectrogram has shape [stft_frames, num_spectrogram_bins]
         # Convert spectrogram into log mel spectrogram.

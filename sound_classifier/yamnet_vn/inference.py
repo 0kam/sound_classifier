@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow_io as tfio
 from sound_classifier.data import load_audio
-from sound_classifier.yamnet import YAMNet
+from sound_classifier.yamnet_weak import YAMNet
 from sound_classifier.yamnet_vn import params
 from matplotlib import pyplot as plt
 import numpy as np
@@ -16,8 +16,8 @@ waveform = waveform[:n_patch * n_sample]
 waveform = tf.reshape(waveform, [n_patch, n_sample])
 yamnet.plot(waveform)
 
-from sound_classifier.audio_device import USBMic
-mic = USBMic(3)
+from sound_classifier.audio_device import CustomMic
+mic = CustomMic(3, "Analog")
 
 while True:
     #plt.ion()

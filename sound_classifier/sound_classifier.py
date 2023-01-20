@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from sound_classifier.data import AudioSequence, load_audio
+from sound_classifier.data import StrongAudioSequence, load_audio
 
 class SoundClassifier(ABC):
     def __init__(self) -> None:
@@ -15,8 +15,12 @@ class SoundClassifier(ABC):
         """
         pass
 
-    def dataset(self, data_dir:str, batch_size:int, rate=16000, shuffle=True, val_ratio=0):
-        return AudioSequence(data_dir, batch_size, rate=rate, shuffle=shuffle, val_ratio=val_ratio)
+    def dataset(self, source_dir:str, label_dir:str, labels:list, pred_patch_sec:float, pred_hop_sec:float, \
+        patch_sec:float = 3.0, patch_hop:float = 1.0, rate:int = 16000, \
+        batch_size:int = 10, shuffle:bool = True, val_ratio=0):
+        return StrongAudioSequence(source_dir, label_dir, labels, pred_patch_sec, pred_hop_sec, \
+            patch_sec, patch_hop, rate, \
+            batch_size, shuffle, val_ratio)
 
     def train(self):
         pass
