@@ -19,7 +19,4 @@ CLASSIFIER_ACTIVATION = 'sigmoid'
 
 FEATURES_LAYER_NAME = 'my_features'
 EXAMPLE_PREDICTIONS_LAYER_NAME = 'my_predictions'
-
-CLASSES = "sound_classifier/yamnet_vn/classes.csv"
-PRETRAINED_WEIGHTS = "sound_classifier/yamnet_google/yamnet.h5"
 BATCH_SIZE = 20
