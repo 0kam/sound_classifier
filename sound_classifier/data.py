@@ -10,10 +10,10 @@ import random
 from sklearn.model_selection import train_test_split
 import copy
 import pandas as pd
-from scipy.signal import resample_poly
 import math
+from audiomentations import Compose
 
-def load_audio(path:str, rate:int = 16000):
+def load_audio(path:str, rate:int = 16000, normalize = False):
         """
         Loading and resampling an audio file.
         Parameters
@@ -22,7 +22,8 @@ def load_audio(path:str, rate:int = 16000):
             A path to the audio file.
         rate : int, default 16000
             The output audio will be resampled to this rate.
-        
+        normalize : boolean, default False
+            If True, normalizes the audio by deviding its STD.
         Returns
         -------
         waveform : tf.Tensor
@@ -33,6 +34,9 @@ def load_audio(path:str, rate:int = 16000):
         if audio.dtype == tf.int16:
             waveform = waveform / tf.int16.max
         waveform = tfio.audio.resample(waveform, audio.rate.numpy(), rate)
+        if normalize:
+            sigma = abs(waveform.numpy()).std()
+            waveform = waveform / sigma
         return waveform[:,0]
 
 def save_audio(waveform, path, rate):
@@ -97,12 +101,33 @@ class StrongAudioSequence(Sequence):
         patch_sec:float, patch_hop:float = 1.0, rate:int = 16000, \
         batch_size:int = 10, shuffle:bool = True, val_ratio=0.8,
         stratify_by_dir:bool = True,
-        under_sample = True
+        normalize:bool = True,
+        under_sample:bool = True,
+        threshold:float = 0.1,
+        augmentations = None
         ):
+        """
+        Parameters
+        ----------
+        stratify_by_dir : bool
+            Stratify the train and tvalidation data by the subdirectory of the  source_dir
+        normalize : bool
+            If true, normalize the audio when loading
+        under_sample : bool
+            Not implemented yet
+        threshold : float
+            thresholdより小さい割合でしか含まれていないラベルは無視する
+        augmentations : audiomentations.Compose default audiomentations.Compose
+            audiomentationsパッケージで作ったデータオーギュメンテーションのワークフロー。
+            labelデータは変更されないため、Shiftのような時間方向の処理は入れないこと。
+        """
         self.rate = rate
         self.batch_size = batch_size
         self.labels = labels
+        self.normalize = normalize
         self.under_sample = under_sample
+        self.threshold = threshold
+        self.augmentations = augmentations
         self.label_to_idx = {}
         for i, c in enumerate(self.labels):
             self.label_to_idx[c] = i
@@ -135,20 +160,16 @@ class StrongAudioSequence(Sequence):
     def load_data(self, source_path, label_path):
         assert(Path(source_path).stem == Path(label_path).stem)
         # loading an audio file
-        a = tfio.audio.AudioIOTensor(source_path)
-        sr = a.rate.numpy()
-        a = a.to_tensor()
-        if a.dtype == tf.int16:
-            a = a / tf.int16.max
-        a = tfio.audio.resample(a, sr, self.rate)
+        a = load_audio(source_path, self.rate, self.normalize)
         # loading a label file
         label = pd.read_table(label_path, header=None, names=["start", "end", "label"])
         label["start"] = (label["start"] * self.rate).astype(int)
         label["end"] = (label["end"] * self.rate).astype(int)
         l = np.zeros((len(a), len(self.labels)))
         for _, s, e, c in label.itertuples():
-            c = self.label_to_idx[c]
-            l[s:e, c] = 1
+            if c in self.labels:
+                c = self.label_to_idx[c]
+                l[s:e, c] = 1
         audios = []
         labels = []
         i = 0
@@ -158,8 +179,12 @@ class StrongAudioSequence(Sequence):
             if end > len(a):
                 break
             audios.append(a[start:end])
-            ll = tf.signal.frame(l[start:end], frame_length=self.pred_len, frame_step=self.pred_hop, axis=0)
-            ll = tf.reduce_max(ll, axis = 1)
+            ll = tf.signal.frame(l[start:end], frame_length=self.pred_len,\
+                frame_step=self.pred_hop, axis=0, pad_end = True)
+            ll = tf.reduce_mean(ll, axis = 1)
+            ll = tf.cast(tf.greater(ll, self.threshold), tf.int32)
+            if len(ll.shape) < 3:
+                ll = tf.expand_dims(ll, 0)
             labels.append(ll)
             i += 1
         if len(audios) == 0:
@@ -183,7 +208,12 @@ class StrongAudioSequence(Sequence):
                 self.label_data.append(label)
         self.audio_data = tf.squeeze(tf.concat(self.audio_data, 0))
         self.label_data = tf.squeeze(tf.concat(self.label_data, 0))
-
+        if self.shuffle:
+            idx = tf.range(start=0, limit=tf.shape(self.audio_data)[0], dtype=tf.int32)
+            idx = tf.random.shuffle(idx)
+            self.audio_data = tf.gather(self.audio_data, idx)
+            self.label_data = tf.gather(self.label_data, idx)
+            
     def set_mode(self, mode:str):
         """
         Changing training/validation mode.
@@ -211,6 +241,9 @@ class StrongAudioSequence(Sequence):
         end = (idx + 1) * self.batch_size
         audio = self.audio_data[start:end]
         label = self.label_data[start:end]
+        if (self.augmentations is not None) & (self.mode == "train"):
+            audio = self.augmentations(audio.numpy(), self.rate)
+            audio = tf.convert_to_tensor(audio)
         return audio, label
     
     @classmethod
