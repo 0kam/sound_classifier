@@ -32,24 +32,11 @@ train_ds = ds.set_mode("train")
 val_ds = ds.set_mode("val")
 
 optim_top = RectifiedAdam(learning_rate = 5e-4)
-yamnet.train(10, train_ds, val_ds, optim_top, fine_tune=False, workers=18)
+yamnet.train(30, train_ds, val_ds, optim_top, fine_tune=False, workers=18)
 res1 = yamnet.evaluate(val_ds, 0.5)
 optim_finetune = RectifiedAdam(learning_rate = 5e-5)
-yamnet.train(10, train_ds, val_ds, optim_finetune, fine_tune = True, n_layers = 3, workers=0)
+yamnet.train(30, train_ds, val_ds, optim_finetune, fine_tune = True, n_layers = 3, workers=0)
 res2 = yamnet.evaluate(val_ds, 0.5)
 
 yamnet.save("sound_classifier/yamnet_vn/finetune.h5", model_base = False)
 yamnet.save("sound_classifier/yamnet_vn/finetune_base.h5", model_base = True)
-
-from sound_classifier.audio_device import CustomMic
-import tensorflow as tf
-import tensorflow_io as tfio
-import numpy as np
-mic = CustomMic(0.96, "Analog")
-
-while True:
-    waveform = mic.q.get()
-    waveform = tf.convert_to_tensor(waveform.astype(np.float32) / tf.int16.max)
-    waveform = tfio.audio.resample(waveform, mic.sampling_rate, params.SAMPLE_RATE)
-    waveform = tf.expand_dims(waveform, 0)
-    print(yamnet.predict(waveform))

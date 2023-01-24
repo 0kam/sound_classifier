@@ -31,19 +31,5 @@ optimizer = RectifiedAdam(1e-3)
 fcn.train(20, train_ds, val_ds, fine_tune=True, optimizer=optimizer, workers=4)
 fcn.evaluate(val_ds, 0.75)
 
-from sound_classifier.audio_device import CustomMic
-import tensorflow as tf
-import tensorflow_io as tfio
-import numpy as np
-mic = CustomMic(params.PATCH_WINDOW_SECONDS, "Analog")
-
 fcn.save("sound_classifier/fcn_vn/fcn.h5", model_base = False)
 fcn.save("sound_classifier/fcn_vn/fcn_base.h5", model_base = True)
-
-while True:
-    waveform = mic.q.get()
-    waveform = tf.convert_to_tensor(waveform.astype(np.float32) / tf.int16.max)
-    waveform = tfio.audio.resample(waveform, mic.sampling_rate, params.SAMPLE_RATE)
-    waveform = tf.expand_dims(waveform, 0)
-    print(tf.reduce_mean(fcn.predict(waveform), 1))
-    print("----------")

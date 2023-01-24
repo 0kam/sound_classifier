@@ -4,6 +4,9 @@ import tensorflow as tf
 from tensorflow_addons.metrics import MultiLabelConfusionMatrix
 from importlib import import_module
 from audiomentations import Compose
+from sound_classifier.audio_device import AudioDevice
+import tensorflow_io as tfio
+import numpy as np
 
 class ReducedAUC(tf.keras.metrics.Metric):
     def __init__(self, curve="PR", multi_label=True, reduce_method=tf.reduce_max, reduce_axis=1, **kwargs):
@@ -130,7 +133,7 @@ class SoundClassifier(ABC):
         )
     
     def evaluate(self, dataset, threshold, reduce_method, reduce_axis):
-        conf = ReducedMultiLabelConfusionMatrix(self.params.NUM_CLASSES, reduce_method, reduce_axis)
+        conf = ReducedMultiLabelConfusionMatrix(num_classes=self.params.NUM_CLASSES, reduce_method=reduce_method, reduce_axis=reduce_axis)
         y_pred = []
         y_true = []
         for a, l in dataset:
@@ -164,3 +167,19 @@ class SoundClassifier(ABC):
             self.model_base.save(path)
         else:
             self.model.save(path)
+        
+    def mic_inference(self, mic: AudioDevice):
+        """
+        Predict from raw waveform
+        Parameters:
+        ----------
+        waveform : np.array
+            np.array with shape [num_samples] and dtype float32 (which means waveform takes values with in -1.0 ~ 1.0)
+        """
+        waveform = mic.q.get()
+        waveform = tf.convert_to_tensor(waveform.astype(np.float32) / tf.int16.max)
+        waveform = tfio.audio.resample(waveform, mic.sampling_rate, self.params.SAMPLE_RATE)
+        waveform = tf.expand_dims(waveform, 0)
+        res = self.predict(waveform)
+        print(res)
+        return res
