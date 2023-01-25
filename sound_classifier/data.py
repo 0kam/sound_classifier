@@ -101,8 +101,8 @@ class StrongAudioSequence(Sequence):
         patch_sec:float, patch_hop:float = 1.0, rate:int = 16000, \
         batch_size:int = 10, shuffle:bool = True, val_ratio=0.8,
         stratify_by_dir:bool = True,
-        normalize:bool = True,
-        under_sample:bool = True,
+        normalize:bool = False,
+        under_sample:bool = False,
         threshold:float = 0.1,
         augmentations = None
         ):

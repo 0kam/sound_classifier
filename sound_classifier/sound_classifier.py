@@ -175,7 +175,7 @@ class SoundClassifier(ABC):
         else:
             self.model.save_weights(path)
         
-    def mic_inference(self, mic: AudioDevice, normalize:bool=True):
+    def mic_inference(self, mic: AudioDevice, normalize:bool=False):
         """
         Predict from raw waveform
         Parameters:
