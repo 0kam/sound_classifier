@@ -122,7 +122,7 @@ class SoundClassifier(ABC):
                 factor=0.1,
                 patience=3
             )
-            ]
+        ]
 
         initial_epoch = 0
         if (self.history is not None):
