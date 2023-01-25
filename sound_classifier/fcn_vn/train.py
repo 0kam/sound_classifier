@@ -21,7 +21,8 @@ ds = fcn.dataset(
     batch_size = params.BATCH_SIZE,
     patch_hop = params.PATCH_HOP_SECONDS,
     patch_sec=params.PATCH_WINDOW_SECONDS,
-    threshold = 0.1
+    threshold = 0.1,
+    augmentations=augs
 )
 
 train_ds = ds.set_mode("train")
@@ -29,7 +30,7 @@ val_ds = ds.set_mode("val")
 
 optimizer = RectifiedAdam(1e-3)
 fcn.train(20, train_ds, val_ds, fine_tune=True, optimizer=optimizer, workers=4)
-fcn.evaluate(val_ds, 0.75)
+fcn.evaluate(val_ds, 0.5)
 
-fcn.save("sound_classifier/fcn_vn/fcn.h5", model_base = False)
-fcn.save("sound_classifier/fcn_vn/fcn_base.h5", model_base = True)
+fcn.save_weights("sound_classifier/fcn_vn/fcn.h5", model_base = False)
+fcn.save_weights("sound_classifier/fcn_vn/fcn_base.h5", model_base = True)
