@@ -31,15 +31,19 @@ ds = yamnet.dataset(
 train_ds = ds.set_mode("train")
 val_ds = ds.set_mode("val")
 
+train_ds.augmentations = None
+
 optim_top = RectifiedAdam(learning_rate = 5e-4)
 yamnet.train(30, train_ds, val_ds, optim_top, fine_tune=False, workers=18)
 res1 = yamnet.evaluate(val_ds, 0.5)
 optim_finetune = RectifiedAdam(learning_rate = 5e-5)
-yamnet.train(30, train_ds, val_ds, optim_finetune, fine_tune = True, n_layers = 3, workers=0)
+yamnet.train(30, train_ds, val_ds, optim_finetune, fine_tune = True, n_layers = 3, workers=18)
 res2 = yamnet.evaluate(val_ds, 0.5)
-yamnet = YAMNet("sound_classifier.yamnet_vn.params")
-yamnet.train(30, train_ds, val_ds, optim_finetune, fine_tune = True, n_layers = 14, workers=0)
-res3 = yamnet.evaluate(val_ds, 0.5)
+yamnet.save_weights("sound_classifier/yamnet_vn/finetune.h5")
 
-yamnet.save("sound_classifier/yamnet_vn/finetune.h5", model_base = False)
-yamnet.save("sound_classifier/yamnet_vn/finetune_base.h5", model_base = True)
+yamnet.save_weights("sound_classifier/yamnet_vn/finetune.h5", model_base = False)
+yamnet.save_weights("sound_classifier/yamnet_vn/finetune_base.h5", model_base = True)
+
+yamnet2 = YAMNet("sound_classifier.yamnet_vn.params")
+yamnet2.train(30, train_ds, val_ds, optim_finetune, fine_tune = True, n_layers = 14, workers=18)
+res3 = yamnet2.evaluate(val_ds, 0.5)

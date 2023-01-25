@@ -1,6 +1,6 @@
 from sound_classifier.sound_classifier import SoundClassifier
 from sound_classifier.features import log_mel_spec
-from tensorflow.keras import Model, Sequential, layers
+from keras import Model, Sequential, layers
 import tensorflow as tf
 import math
 
@@ -30,17 +30,23 @@ class FCN(SoundClassifier):
             layers.BatchNormalization(),
             layers.Conv2DTranspose(1, (2,1), strides=(2,1), padding="same", activation="relu"),
             layers.BatchNormalization()
-        ])
+        ], name="fcn_base")
+        
         h = self.model_base(spec)
-        self.model = Sequential([
-            self.feature_extraction,
-            self.model_base,
+
+        self.model_top = Sequential([
             layers.Reshape(h.shape[1:3]),
             layers.Dense(units=self.params.NUM_CLASSES, use_bias=True),
             layers.Activation(
                 name=self.params.EXAMPLE_PREDICTIONS_LAYER_NAME,
                 activation=self.params.CLASSIFIER_ACTIVATION
             )
+        ], name="fcn_top")
+
+        self.model = Sequential([
+            self.feature_extraction,
+            self.model_base,
+            self.model_top
         ])
 
         self.history = None

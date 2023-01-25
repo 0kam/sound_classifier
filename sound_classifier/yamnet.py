@@ -1,6 +1,6 @@
 from sound_classifier.sound_classifier import SoundClassifier
 from sound_classifier.features import log_mel_spec
-from tensorflow.keras import Model, Sequential, layers
+from keras import Model, Sequential, layers
 import math
 
 class YAMNet(SoundClassifier):
@@ -34,19 +34,22 @@ class YAMNet(SoundClassifier):
         )(spec)
         for (i, (layer_fun, kernel, stride, filters)) in enumerate(self._YAMNET_LAYER_DEFS):
             h = layer_fun('layer{}'.format(i + 1), kernel, stride, filters)(h)
-        #h = layers.GlobalAveragePooling2D()(h)
         h = layers.GlobalMaxPooling2D()(h)
+
         self.feature_extraction = Model(name = "feature_extraction", inputs = waveform, outputs = spec)
         self.model_base = Model(name = "yamnet_base", inputs = spec, outputs = h)
-        self.model = Sequential([
-            self.feature_extraction,
-            self.model_base,
+        self.model_top = Sequential([
             layers.Dense(units=self.params.NUM_CLASSES, use_bias=True),
             layers.Activation(
                 name=self.params.EXAMPLE_PREDICTIONS_LAYER_NAME,
                 activation=self.params.CLASSIFIER_ACTIVATION
             )
-        ])
+        ], name="yamnet_top")
+        self.model = Sequential([
+            self.feature_extraction,
+            self.model_base,
+            self.model_top
+        ], name="yamnet")
         self.history = None
         
     def features(self, waveform):

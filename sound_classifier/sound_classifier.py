@@ -97,27 +97,32 @@ class SoundClassifier(ABC):
             threshold=threshold, augmentations=augmentations)
     
     def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, idx, reduce_method, reduce_axis, workers):
+        self.model.trainable = True
         if fine_tune:
-            self.model.trainable = True
             for layer in self.model_base.layers[:-idx]:
                 layer.trainable = False
         else:
             self.model_base.trainable = False
         
-        rmse = tf.keras.metrics.RootMeanSquaredError()
-        auc = ReducedAUC(reduce_method = reduce_method, reduce_axis = reduce_axis)
-        #auc = tf.keras.metrics.AUC(curve = "PR", multi_label=True)
+        rmse = tf.keras.metrics.RootMeanSquaredError(name="metric_rmse")
+        auc = ReducedAUC(reduce_method = reduce_method, reduce_axis = reduce_axis, name="metric_reduced_auc")
         self.model.compile(
-            loss=tf.keras.losses.BinaryCrossentropy(),
+            loss=tf.keras.losses.BinaryCrossentropy(name="BCEloss"),
             optimizer=optimizer,
             metrics=[rmse, auc]
         )
         
-        callback = tf.keras.callbacks.EarlyStopping(
-            monitor='loss',
-            patience=3,
-            restore_best_weights=True
-        )
+        callbacks = [
+            tf.keras.callbacks.EarlyStopping(
+                monitor='val_loss',
+                patience=5,
+                restore_best_weights=True),
+            tf.keras.callbacks.ReduceLROnPlateau(
+                monitor="val_loss",
+                factor=0.1,
+                patience=3
+            )
+            ]
 
         initial_epoch = 0
         if (self.history is not None):
@@ -127,13 +132,13 @@ class SoundClassifier(ABC):
         self.history = self.model.fit(train_ds,
             epochs=epochs,
             validation_data=val_ds,
-            callbacks=callback,
+            callbacks=callbacks,
             initial_epoch = initial_epoch,
             workers = workers
         )
     
     def evaluate(self, dataset, threshold, reduce_method, reduce_axis):
-        conf = ReducedMultiLabelConfusionMatrix(num_classes=self.params.NUM_CLASSES, reduce_method=reduce_method, reduce_axis=reduce_axis)
+        conf = ReducedMultiLabelConfusionMatrix(num_classes=self.params.NUM_CLASSES, reduce_method=reduce_method, reduce_axis=reduce_axis, name="reduced_confusion_matrix")
         y_pred = []
         y_true = []
         for a, l in dataset:
@@ -157,18 +162,20 @@ class SoundClassifier(ABC):
         return self.model(waveform)
 
     def load_weights(self, path, model_base=False):
+        self.model.trainable = False
         if model_base:
             self.model_base.load_weights(path)
         else:
             self.model.load_weights(path)
 
-    def save(self, path, model_base=False):
+    def save_weights(self, path, model_base=False):
+        self.model.trainable = False
         if model_base:
-            self.model_base.save(path)
+            self.model_base.save_weights(path)
         else:
-            self.model.save(path)
+            self.model.save_weights(path)
         
-    def mic_inference(self, mic: AudioDevice):
+    def mic_inference(self, mic: AudioDevice, normalize:bool=True):
         """
         Predict from raw waveform
         Parameters:
@@ -179,7 +186,9 @@ class SoundClassifier(ABC):
         waveform = mic.q.get()
         waveform = tf.convert_to_tensor(waveform.astype(np.float32) / tf.int16.max)
         waveform = tfio.audio.resample(waveform, mic.sampling_rate, self.params.SAMPLE_RATE)
+        if normalize:
+            sigma = abs(waveform.numpy()).std()
+            waveform = waveform / sigma
         waveform = tf.expand_dims(waveform, 0)
         res = self.predict(waveform)
-        print(res)
         return res

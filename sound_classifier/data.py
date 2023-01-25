@@ -3,7 +3,7 @@ import tensorflow as tf
 from scipy.io import wavfile
 from pathlib import Path
 from glob import glob
-from tensorflow.keras.utils import Sequence
+from keras.utils import Sequence
 import numpy as np
 from tqdm import tqdm
 import random
