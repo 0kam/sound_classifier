@@ -2,15 +2,16 @@ from sound_classifier.fcn import FCN
 from sound_classifier.fcn_vn import params
 from tensorflow_addons.optimizers import RectifiedAdam
 from tensorflow import optimizers as optim
-from audiomentations import Compose, AirAbsorption, AddBackgroundNoise, TanhDistortion, PitchShift, AddGaussianNoise
+from audiomentations import Compose, AirAbsorption, AddBackgroundNoise, TanhDistortion, PitchShift, AddGaussianNoise, Gain
 
 fcn = FCN("sound_classifier.fcn_vn.params")
 
 augs = Compose([
-    AirAbsorption(p = 0.75),
-    TanhDistortion(),
-    PitchShift(),
-    AddGaussianNoise(p = 1.0)
+    Gain(min_gain_in_db = -20, max_gain_in_db=0, p = 0.5),
+    AirAbsorption(),
+    #TanhDistortion(),
+    #itchShift(),
+    AddGaussianNoise()
 ])
 
 ds = fcn.dataset(
@@ -28,8 +29,10 @@ ds = fcn.dataset(
 train_ds = ds.set_mode("train")
 val_ds = ds.set_mode("val")
 
+train_ds.augmentations = augs
+
 optimizer = RectifiedAdam(1e-3)
-fcn.train(20, train_ds, val_ds, fine_tune=True, optimizer=optimizer, workers=4)
+fcn.train(30, train_ds, val_ds, fine_tune=True, optimizer=optimizer, workers=4)
 fcn.evaluate(val_ds, 0.5)
 
 fcn.save_weights("sound_classifier/fcn_vn/fcn.h5", model_base = False)
