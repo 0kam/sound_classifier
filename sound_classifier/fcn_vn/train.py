@@ -7,10 +7,9 @@ from audiomentations import Compose, AirAbsorption, AddBackgroundNoise, TanhDist
 fcn = FCN("sound_classifier.fcn_vn.params")
 
 augs = Compose([
-    Gain(min_gain_in_db = -20, max_gain_in_db=0, p = 0.5),
     AirAbsorption(),
-    #TanhDistortion(),
-    #itchShift(),
+    TanhDistortion(),
+    PitchShift(),
     AddGaussianNoise()
 ])
 
@@ -22,7 +21,7 @@ ds = fcn.dataset(
     batch_size = params.BATCH_SIZE,
     patch_hop = params.PATCH_HOP_SECONDS,
     patch_sec=params.PATCH_WINDOW_SECONDS,
-    threshold = 0.1,
+    threshold = 0,
     augmentations=augs
 )
 
