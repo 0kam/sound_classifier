@@ -12,5 +12,6 @@ tensorflow_addons
 tensorflow-io
 audiomentations
 scikit-learn
-
+tqdm
+pandas
 ```
