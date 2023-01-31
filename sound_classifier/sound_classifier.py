@@ -94,7 +94,7 @@ class SoundClassifier(ABC):
     def dataset(self, source_dir:str, label_dir:str, labels:list, pred_patch_sec:float, pred_hop_sec:float, \
         patch_sec:float = 3.0, patch_hop:float = 1.0, rate:int = 16000, \
         batch_size:int = 10, shuffle:bool = True, val_ratio:float = 0, threshold:float = 0, 
-        augmentations: Compose = None):
+        augmentations = None):
         return StrongAudioSequence(source_dir=source_dir, label_dir=label_dir, labels=labels,\
             pred_patch_sec=pred_patch_sec, pred_hop_sec=pred_hop_sec, \
             patch_sec=patch_sec, patch_hop=patch_hop, rate=rate, \
