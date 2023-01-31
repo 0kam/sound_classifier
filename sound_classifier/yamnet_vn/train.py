@@ -36,13 +36,13 @@ train_ds.normalize = False
 val_ds.normalize = False
 
 optim_top = RectifiedAdam(learning_rate = 5e-4)
-yamnet.train(30, train_ds, val_ds, optim_top, fine_tune=False, workers=18)
+yamnet.train(30, train_ds, val_ds, optim_top, fine_tune=False, workers=6)
 res1 = yamnet.evaluate(val_ds, 0.5)
 yamnet.save_weights("sound_classifier/yamnet_vn/transfer.h5", model_base = False)
 yamnet.save_weights("sound_classifier/yamnet_vn/transfer_base.h5", model_base = True)
 
 optim_finetune = RectifiedAdam(learning_rate = 5e-5)
-yamnet.train(30, train_ds, val_ds, optim_finetune, fine_tune = True, n_layers = 3, workers=18)
+yamnet.train(30, train_ds, val_ds, optim_finetune, fine_tune = True, n_layers = 3, workers=6)
 res2 = yamnet.evaluate(val_ds, 0.5)
 yamnet.save_weights("sound_classifier/yamnet_vn/finetune.h5", model_base = False)
 yamnet.save_weights("sound_classifier/yamnet_vn/finetune_base.h5", model_base = True)
