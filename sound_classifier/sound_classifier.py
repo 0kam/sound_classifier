@@ -1,12 +1,17 @@
 from abc import ABC, abstractmethod
-from sound_classifier.data import StrongAudioSequence, load_audio
 import tensorflow as tf
-from tensorflow_addons.metrics import MultiLabelConfusionMatrix
 from importlib import import_module
-from audiomentations import Compose
 from sound_classifier.audio_device import AudioDevice
-import tensorflow_io as tfio
+from scipy.signal import resample
 import numpy as np
+import math
+# Below is only required in training
+try:
+    from tensorflow_addons.metrics import MultiLabelConfusionMatrix
+    from audiomentations import Compose
+    from sound_classifier.data import StrongAudioSequence, load_audio
+except ModuleNotFoundError:
+    print("The classifier is only available with prediction mode!")
 
 class ReducedAUC(tf.keras.metrics.Metric):
     def __init__(self, curve="PR", multi_label=True, reduce_method=tf.reduce_max, reduce_axis=1, **kwargs):
@@ -184,8 +189,9 @@ class SoundClassifier(ABC):
             np.array with shape [num_samples] and dtype float32 (which means waveform takes values with in -1.0 ~ 1.0)
         """
         waveform = mic.q.get()
+        waveform = resample(waveform, math.floor(waveform.shape[0] / mic.sampling_rate * self.params.SAMPLE_RATE))
         waveform = tf.convert_to_tensor(waveform.astype(np.float32) / tf.int16.max)
-        waveform = tfio.audio.resample(waveform, mic.sampling_rate, self.params.SAMPLE_RATE)
+        #waveform = tfio.audio.resample(waveform, mic.sampling_rate, self.params.SAMPLE_RATE)
         if normalize:
             sigma = abs(waveform.numpy()).std()
             waveform = waveform / sigma
