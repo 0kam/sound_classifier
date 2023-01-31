@@ -11,7 +11,6 @@ from sklearn.model_selection import train_test_split
 import copy
 import pandas as pd
 import math
-from audiomentations import Compose
 
 def load_audio(path:str, rate:int = 16000, normalize = False):
         """

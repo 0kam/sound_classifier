@@ -1,11 +1,11 @@
-from sound_classifier.yamnet import YAMNet
-from sound_classifier.audio_device import CustomMic, USBMic
+from sound_classifier.models.yamnet import YAMNet
+from sound_classifier.core.audio_device import CustomMic, USBMic
 import numpy as np
-from sound_classifier.yamnet_vn import params
+from zoo.yamnet_vn import params
 np.set_printoptions(precision=2, suppress=True)
 
-yamnet = YAMNet("sound_classifier.yamnet_vn.params")
-yamnet.load_weights("sound_classifier/yamnet_vn/finetune.h5")
+yamnet = YAMNet("zoo.yamnet_vn.params")
+yamnet.load_weights("zoo/yamnet_vn/finetune.h5")
 
 mic = CustomMic(0.96, "USB")
 

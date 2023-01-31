@@ -1,5 +1,5 @@
-from sound_classifier.fcn import FCN
-from sound_classifier.fcn_vn import params
+from sound_classifier.models.fcn import FCN
+from sound_classifier.zoo.fcn_vn import params
 from tensorflow_addons.optimizers import RectifiedAdam
 from tensorflow import optimizers as optim
 from audiomentations import Compose, AirAbsorption, AddBackgroundNoise, TanhDistortion, PitchShift, AddGaussianNoise, Gain

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import tensorflow as tf
 from importlib import import_module
-from sound_classifier.audio_device import AudioDevice
+from sound_classifier.core.audio_device import AudioDevice
 from scipy.signal import resample
 import numpy as np
 import math
@@ -9,7 +9,7 @@ import math
 try:
     from tensorflow_addons.metrics import MultiLabelConfusionMatrix
     from audiomentations import Compose
-    from sound_classifier.data import StrongAudioSequence, load_audio
+    from sound_classifier.core.data import StrongAudioSequence, load_audio
 except ModuleNotFoundError:
     print("The classifier is only available with prediction mode!")
 

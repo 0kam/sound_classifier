@@ -1,8 +1,8 @@
 import tensorflow as tf
 import tensorflow_io as tfio
-from sound_classifier.data import load_audio
-from sound_classifier.yamnet_old import YAMNet
-from sound_classifier.yamnet_google import params
+from sound_classifier.core.data import load_audio
+from sound_classifier.models.yamnet import YAMNet
+from sound_classifier.zoo.yamnet_google import params
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -21,7 +21,7 @@ yamnet.plot(waveform)
 waveform = load_audio("Kumazemi_03.wav", params.SAMPLE_RATE)
 yamnet.plot(waveform)
 
-from sound_classifier.audio_device import USBMic
+from sound_classifier.core.audio_device import USBMic
 mic = USBMic(5)
 
 a = mic.q.get()

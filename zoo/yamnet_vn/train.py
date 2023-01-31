@@ -1,5 +1,5 @@
-from sound_classifier.yamnet import YAMNet
-from sound_classifier.yamnet_vn import params
+from sound_classifier.models.yamnet import YAMNet
+from sound_classifier.zoo.yamnet_vn import params
 from tensorflow_addons.optimizers import RectifiedAdam
 from tensorflow import optimizers as optim
 from audiomentations import Compose, AirAbsorption, AddBackgroundNoise, TanhDistortion, PitchShift, AddGaussianNoise, Gain

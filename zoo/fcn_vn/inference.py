@@ -1,7 +1,7 @@
-from sound_classifier.fcn import FCN
-from sound_classifier.audio_device import CustomMic
+from sound_classifier.models.fcn import FCN
+from sound_classifier.core.audio_device import CustomMic
 import numpy as np
-from sound_classifier.fcn_vn import params
+from sound_classifier.zoo.fcn_vn import params
 np.set_printoptions(precision=2, suppress=True)
 
 fcn = FCN("sound_classifier.fcn_vn.params")

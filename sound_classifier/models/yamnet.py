@@ -1,5 +1,5 @@
-from sound_classifier.sound_classifier import SoundClassifier
-from sound_classifier.features import log_mel_spec
+from sound_classifier.core.sound_classifier import SoundClassifier
+from sound_classifier.core.features import log_mel_spec
 from keras import Model, Sequential, layers
 import math
 
