@@ -4,13 +4,14 @@ from zoo.yamnet_vn import params
 from scipy.signal import resample
 import numpy as np
 import math
-import tensorflow as tf
+from tensorflow import lite as tflite
+# from tensorflow_runtime import interpritor as tflite
 np.set_printoptions(precision=2, suppress=True)
 
 th = 0.75
 
 # Set interpreter
-interpreter = tf.lite.Interpreter(model_path = "zoo/yamnet_vn/finetune.tflite")
+interpreter = tflite.Interpreter(model_path = "zoo/yamnet_vn/finetune.tflite")
 interpreter.allocate_tensors()
 
 # Get model I/O
