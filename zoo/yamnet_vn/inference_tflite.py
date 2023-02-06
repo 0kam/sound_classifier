@@ -4,8 +4,8 @@ from zoo.yamnet_vn import params
 from scipy.signal import resample
 import numpy as np
 import math
-from tensorflow import lite as tflite
-# from tensorflow_runtime import interpritor as tflite
+# from tensorflow import lite as tflite # Python 3.10 has not support tflite_runtime yet.
+import tflite_runtime.interpreter as tflite
 np.set_printoptions(precision=2, suppress=True)
 
 th = 0.75

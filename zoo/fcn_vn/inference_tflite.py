@@ -4,7 +4,8 @@ from zoo.fcn_vn import params
 from scipy.signal import resample
 import numpy as np
 import math
-import tensorflow as tf
+# from tensorflow import lite as tflite # Python 3.10 has not support tflite_runtime yet.
+import tflite_runtime.interpreter as tflite
 np.set_printoptions(precision=2, suppress=True)
 
 mic = CustomMic(0.96, "Analog")
@@ -13,7 +14,7 @@ th = 0.5
 n_th = int(0.96 * 240 * 0.1) # 0.1秒以上Positiveなら反応する
 
 # Set interpreter
-interpreter = tf.lite.Interpreter(model_path = "zoo/fcn_vn/fcn.tflite")
+interpreter = tflite.Interpreter(model_path = "zoo/fcn_vn/fcn.tflite")
 interpreter.allocate_tensors()
 
 # Get model I/O
