@@ -25,7 +25,7 @@ while True:
     waveform = resample(waveform, math.floor(
             waveform.shape[0] / mic.sampling_rate * params.SAMPLE_RATE
     ))
-    waveform = waveform.astype(np.float32)
+    waveform = waveform.astype(np.float32) / 32767 # tf.int16.max
     waveform = np.expand_dims(waveform, 0)
     interpreter.set_tensor(input_details[0]['index'], waveform)
     interpreter.invoke()
