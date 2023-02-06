@@ -1,5 +1,5 @@
 from sound_classifier.core.sound_classifier import SoundClassifier
-from sound_classifier.core.features import log_mel_spec
+from sound_classifier.core.features import LogMelSpectrogram
 from keras import Model, Sequential, layers
 import tensorflow as tf
 import math
@@ -8,12 +8,22 @@ class FCN(SoundClassifier):
     def __init__(self, params_path) -> None:
         super().__init__(params_path)
         # Loading audio and converting it to Log-Mel Spectrogram
-        waveform = layers.Input(shape = (math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)))
-        spec = self.features(waveform)
-        self.feature_extraction = Model(name = "feature_extraction", inputs = waveform, outputs = spec)
+        input_shape = math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)
+        waveform = layers.Input(shape = input_shape)
+        self.feature_extraction = LogMelSpectrogram(
+            rate=self.params.SAMPLE_RATE, stft_win_sec=self.params.STFT_WINDOW_SECONDS,
+            stft_hop_sec=self.params.STFT_HOP_SECONDS, mel_bands=self.params.MEL_BANDS,
+            mel_min_hz=self.params.MEL_MIN_HZ, mel_max_hz=self.params.MEL_MAX_HZ, \
+            log_offset=self.params.LOG_OFFSET, pad_begin=False, pad_end=True
+        )
+        spec = self.feature_extraction(waveform)
         # Extracting features
         self.model_base = Sequential([
             layers.Input(spec.shape[1:]),
+            layers.Reshape(
+                (self.params.PATCH_FRAMES, self.params.PATCH_BANDS, 1),
+                input_shape=(self.params.PATCH_FRAMES, self.params.PATCH_BANDS)
+            ),
             layers.Conv2D(32, (2,2), strides=(1,1), padding="same", activation="relu"),
             layers.BatchNormalization(),
             layers.MaxPooling2D(pool_size=(2,2)),
@@ -48,16 +58,9 @@ class FCN(SoundClassifier):
             self.model_base,
             self.model_top
         ])
-
+        self.model.build((None, input_shape))
         self.history = None
-        
-    def features(self, waveform):
-        spec = log_mel_spec(waveform, self.params.SAMPLE_RATE, self.params.STFT_WINDOW_SECONDS, \
-                self.params.STFT_HOP_SECONDS, self.params.MEL_BANDS, self.params.MEL_MIN_HZ, self.params.MEL_MAX_HZ, \
-                self.params.LOG_OFFSET)
-        spec = tf.expand_dims(spec, -1)
-        return spec
-    
+
     def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, reduce_method=tf.reduce_max, workers=0):
         return super().train(epochs, train_ds, val_ds, optimizer=optimizer, \
             fine_tune = fine_tune, idx = 0, reduce_method = reduce_method, reduce_axis=1, workers=workers)

@@ -1,5 +1,5 @@
 from sound_classifier.core.sound_classifier import SoundClassifier
-from sound_classifier.core.features import log_mel_spec
+from sound_classifier.core.features import LogMelSpectrogram
 from keras import Model, Sequential, layers
 import math
 
@@ -25,9 +25,16 @@ class YAMNet(SoundClassifier):
         ]
         
         # Loading audio and converting it to Log-Mel Spectrogram
-        waveform = layers.Input(shape = (math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)))
-        spec = self.features(waveform)
-        # Extracting features
+        input_shape = math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)
+        waveform = layers.Input(shape = input_shape)
+        self.feature_extraction = LogMelSpectrogram(
+            rate=self.params.SAMPLE_RATE, stft_win_sec=self.params.STFT_WINDOW_SECONDS,
+            stft_hop_sec=self.params.STFT_HOP_SECONDS, mel_bands=self.params.MEL_BANDS,
+            mel_min_hz=self.params.MEL_MIN_HZ, mel_max_hz=self.params.MEL_MAX_HZ, \
+            log_offset=self.params.LOG_OFFSET, pad_begin=False, pad_end=True
+        )
+        spec = self.feature_extraction(waveform)
+        # Extracting YAMNet features
         h = layers.Reshape(
             (self.params.PATCH_FRAMES, self.params.PATCH_BANDS, 1),
             input_shape=(self.params.PATCH_FRAMES, self.params.PATCH_BANDS)
@@ -36,7 +43,6 @@ class YAMNet(SoundClassifier):
             h = layer_fun('layer{}'.format(i + 1), kernel, stride, filters)(h)
         h = layers.GlobalMaxPooling2D()(h)
 
-        self.feature_extraction = Model(name = "feature_extraction", inputs = waveform, outputs = spec)
         self.model_base = Model(name = "yamnet_base", inputs = spec, outputs = h)
         self.model_top = Sequential([
             layers.Dense(units=self.params.NUM_CLASSES, use_bias=True),
@@ -50,13 +56,8 @@ class YAMNet(SoundClassifier):
             self.model_base,
             self.model_top
         ], name="yamnet")
+        self.model.build((None, input_shape))
         self.history = None
-        
-    def features(self, waveform):
-        spec = log_mel_spec(waveform, self.params.SAMPLE_RATE, self.params.STFT_WINDOW_SECONDS, \
-                self.params.STFT_HOP_SECONDS, self.params.MEL_BANDS, self.params.MEL_MIN_HZ, self.params.MEL_MAX_HZ, \
-                self.params.LOG_OFFSET)
-        return spec
     
     def _batch_norm(self, name):
         def _bn_layer(layer_input):

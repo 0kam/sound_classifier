@@ -7,7 +7,7 @@ np.set_printoptions(precision=2, suppress=True)
 yamnet = YAMNet("zoo.yamnet_vn.params")
 yamnet.load_weights("zoo/yamnet_vn/finetune.h5")
 
-mic = CustomMic(0.96, "USB")
+mic = CustomMic(0.96, "Analog")
 
 th = 0.75
 labels = ["coot", "mallard"]

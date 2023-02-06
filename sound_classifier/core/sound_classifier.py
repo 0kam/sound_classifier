@@ -83,22 +83,19 @@ class ReducedMultiLabelConfusionMatrix(tf.keras.metrics.Metric):
 class SoundClassifier(ABC):
     def __init__(self, params_path) -> None:
         self.params = import_module(params_path)
-    
-    @abstractmethod
-    def features(self, waveform):
-        """
-        Converting a waveform to audio features, such as spectrogram.
-        """
-        pass
 
     def dataset(self, source_dir:str, label_dir:str, labels:list, pred_patch_sec:float, pred_hop_sec:float, \
-        patch_sec:float = 3.0, patch_hop:float = 1.0, rate:int = 16000, \
-        batch_size:int = 10, shuffle:bool = True, val_ratio:float = 0, threshold:float = 0, 
+        patch_sec:float = 3.0, patch_hop:float = 1.0, rate:int = 16000,
+        batch_size:int = 10, shuffle:bool = True, val_ratio:float = 0, 
+        stratify_by_dir:bool = True, normalize:bool = False,
+        under_sample:bool = False,threshold:float = 0, 
         augmentations = None):
         return StrongAudioSequence(source_dir=source_dir, label_dir=label_dir, labels=labels,\
-            pred_patch_sec=pred_patch_sec, pred_hop_sec=pred_hop_sec, \
-            patch_sec=patch_sec, patch_hop=patch_hop, rate=rate, \
-            batch_size=batch_size, shuffle=shuffle, val_ratio=val_ratio, \
+            pred_patch_sec=pred_patch_sec, pred_hop_sec=pred_hop_sec,
+            patch_sec=patch_sec, patch_hop=patch_hop, rate=rate,
+            batch_size=batch_size, shuffle=shuffle, val_ratio=val_ratio,
+            stratify_by_dir=stratify_by_dir, normalize=normalize,
+            under_sample=under_sample,
             threshold=threshold, augmentations=augmentations)
     
     def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, idx, reduce_method, reduce_axis, workers):

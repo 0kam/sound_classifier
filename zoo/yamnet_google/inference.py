@@ -1,25 +1,12 @@
 import tensorflow as tf
 import tensorflow_io as tfio
-from sound_classifier.core.data import load_audio
 from sound_classifier.models.yamnet import YAMNet
-from sound_classifier.zoo.yamnet_google import params
+from zoo.yamnet_google import params
 from matplotlib import pyplot as plt
 import numpy as np
 
-yamnet = YAMNet("sound_classifier.yamnet_google.params")
-yamnet.load_weights("./sound_classifier/yamnet_google/yamnet.h5")
-waveform = load_audio("data/cicada/Tsukutsukuboushi_06.wav", params.SAMPLE_RATE)
-yamnet.plot(waveform)
-waveform = load_audio("Niiniizemi_02.wav", params.SAMPLE_RATE)
-yamnet.plot(waveform)
-waveform = load_audio("Aburazemi_02.wav", params.SAMPLE_RATE)
-yamnet.plot(waveform)
-waveform = load_audio("Higurashi_02.wav", params.SAMPLE_RATE)
-yamnet.plot(waveform)
-waveform = load_audio("Minminzemi_02.wav", params.SAMPLE_RATE)
-yamnet.plot(waveform)
-waveform = load_audio("Kumazemi_03.wav", params.SAMPLE_RATE)
-yamnet.plot(waveform)
+yamnet = YAMNet("zoo.yamnet_google.params")
+yamnet.load_weights("zoo/yamnet_google/yamnet.h5")
 
 from sound_classifier.core.audio_device import USBMic
 mic = USBMic(5)

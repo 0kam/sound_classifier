@@ -1,12 +1,12 @@
 from sound_classifier.models.yamnet import YAMNet
-from sound_classifier.zoo.yamnet_vn import params
+from zoo.yamnet_vn import params
 from tensorflow_addons.optimizers import RectifiedAdam
 from tensorflow import optimizers as optim
 from audiomentations import Compose, AirAbsorption, AddBackgroundNoise, TanhDistortion, PitchShift, AddGaussianNoise, Gain
 
-yamnet = YAMNet("sound_classifier.yamnet_vn.params")
+yamnet = YAMNet("zoo.yamnet_vn.params")
 yamnet.load_weights(
-    "sound_classifier/yamnet_google/yamnet_base.h5",
+    "zoo/yamnet_google/yamnet_base.h5",
     model_base=True
 )
 
@@ -26,14 +26,11 @@ ds = yamnet.dataset(
     patch_hop = params.PATCH_HOP_SECONDS,
     patch_sec=params.PATCH_WINDOW_SECONDS,
     threshold = 0,
-    augmentations = augs
+    augmentations = augs,
 )
 
 train_ds = ds.set_mode("train")
 val_ds = ds.set_mode("val")
-
-train_ds.normalize = False
-val_ds.normalize = False
 
 optim_top = RectifiedAdam(learning_rate = 5e-4)
 yamnet.train(30, train_ds, val_ds, optim_top, fine_tune=False, workers=6)
