@@ -6,6 +6,8 @@ import math
 class YAMNet(SoundClassifier):
     def __init__(self, params_path) -> None:
         super().__init__(params_path)
+    
+    def _create_model(self, tflite=False):
         self._YAMNET_LAYER_DEFS = [
             # (layer_function, kernel, stride, num_filters)
             (self._conv,          [3, 3], 2,   32),
@@ -27,13 +29,13 @@ class YAMNet(SoundClassifier):
         # Loading audio and converting it to Log-Mel Spectrogram
         input_shape = math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)
         waveform = layers.Input(shape = input_shape)
-        self.feature_extraction = LogMelSpectrogram(
+        feature_extraction = LogMelSpectrogram(
             rate=self.params.SAMPLE_RATE, stft_win_sec=self.params.STFT_WINDOW_SECONDS,
             stft_hop_sec=self.params.STFT_HOP_SECONDS, mel_bands=self.params.MEL_BANDS,
             mel_min_hz=self.params.MEL_MIN_HZ, mel_max_hz=self.params.MEL_MAX_HZ, \
-            log_offset=self.params.LOG_OFFSET, pad_begin=False, pad_end=True
+            log_offset=self.params.LOG_OFFSET, pad_begin=False, pad_end=True, tflite=tflite
         )
-        spec = self.feature_extraction(waveform)
+        spec = feature_extraction(waveform)
         # Extracting YAMNet features
         h = layers.Reshape(
             (self.params.PATCH_FRAMES, self.params.PATCH_BANDS, 1),
@@ -43,21 +45,21 @@ class YAMNet(SoundClassifier):
             h = layer_fun('layer{}'.format(i + 1), kernel, stride, filters)(h)
         h = layers.GlobalMaxPooling2D()(h)
 
-        self.model_base = Model(name = "yamnet_base", inputs = spec, outputs = h)
-        self.model_top = Sequential([
+        model_base = Model(name = "yamnet_base", inputs = spec, outputs = h)
+        model_top = Sequential([
             layers.Dense(units=self.params.NUM_CLASSES, use_bias=True),
             layers.Activation(
                 name=self.params.EXAMPLE_PREDICTIONS_LAYER_NAME,
                 activation=self.params.CLASSIFIER_ACTIVATION
             )
         ], name="yamnet_top")
-        self.model = Sequential([
-            self.feature_extraction,
-            self.model_base,
-            self.model_top
+        model = Sequential([
+            feature_extraction,
+            model_base,
+            model_top
         ], name="yamnet")
-        self.model.build((None, input_shape))
-        self.history = None
+        model.build((None, input_shape))
+        return model
     
     def _batch_norm(self, name):
         def _bn_layer(layer_input):

@@ -79,10 +79,18 @@ class ReducedMultiLabelConfusionMatrix(tf.keras.metrics.Metric):
     def reset_state(self):
         self.conf.reset_state()
 
-
 class SoundClassifier(ABC):
     def __init__(self, params_path) -> None:
         self.params = import_module(params_path)
+        self.model = self._create_model()
+        self.feature_extraction = self.model.layers[0]
+        self.model_base = self.model.layers[1]
+        self.model_top = self.model.layers[2]
+        self.history = None
+    
+    @abstractmethod
+    def _create_model(self, tflite=False):
+        pass
 
     def dataset(self, source_dir:str, label_dir:str, labels:list, pred_patch_sec:float, pred_hop_sec:float, \
         patch_sec:float = 3.0, patch_hop:float = 1.0, rate:int = 16000,
