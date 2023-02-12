@@ -8,7 +8,7 @@ class FCN(SoundClassifier):
     def __init__(self, params_path) -> None:
         super().__init__(params_path)
     
-    def _create_model(self, tflite=False):
+    def _get_model_instance(self, tflite=False):
         # Loading audio and converting it to Log-Mel Spectrogram
         input_shape = math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)
         waveform = layers.Input(shape = input_shape)
@@ -63,9 +63,9 @@ class FCN(SoundClassifier):
         model.build((None, input_shape))
         return model
 
-    def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, reduce_method=tf.reduce_max, workers=0):
+    def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, reduce_method=tf.reduce_max, workers=0, quantize=False):
         return super().train(epochs, train_ds, val_ds, optimizer=optimizer, \
-            fine_tune=fine_tune, idx=0, reduce_method=reduce_method, reduce_axis=1, workers=workers)
+            fine_tune=fine_tune, idx=0, reduce_method=reduce_method, reduce_axis=1, workers=workers, quantize=quantize)
     
     def evaluate(self, dataset, threshold=0.5, reduce_method=tf.reduce_max):
         return super().evaluate(dataset, threshold, reduce_method=reduce_method, reduce_axis=1)

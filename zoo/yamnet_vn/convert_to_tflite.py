@@ -1,12 +1,19 @@
 from sound_classifier.models.yamnet import YAMNet
 
 yamnet = YAMNet("zoo.yamnet_vn.params")
-yamnet.load_weights("zoo/yamnet_vn/finetune.h5")
+yamnet.load_weights("zoo/yamnet_vn/finetune_all.h5")
 
 import tensorflow as tf
-converter = tf.lite.TFLiteConverter.from_keras_model(yamnet.model)
-converter.optimizations = [tf.lite.Optimize.DEFAULT]
-converter.target_spec.supported_types = [tf.float16]
-tflite_model = converter.convert()
+tflite_model = yamnet.convert_to_tflite()
+with open("zoo/yamnet_vn/yamnet_vn_finetune_all.tflite", "wb") as f:
+    f.write(tflite_model)
+
+# Quantized model
+yamnet = YAMNet("zoo.yamnet_vn.params")
+yamnet.model = yamnet.quantize_model(yamnet.model)
+yamnet.load_weights("zoo/yamnet_vn/transfer_quantized.h5")
+
+import tensorflow as tf
+tflite_model = yamnet.convert_to_tflite()
 with open("zoo/yamnet_vn/finetune.tflite", "wb") as f:
     f.write(tflite_model)

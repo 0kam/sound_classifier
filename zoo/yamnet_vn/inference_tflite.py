@@ -19,7 +19,7 @@ input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
 # Run inference
-mic = CustomMic(0.96, "Analog")
+mic = CustomMic(0.96, "USB")
 labels = ["coot", "mallard"]
 while True:
     waveform = mic.q.get()

@@ -5,11 +5,11 @@ from zoo.yamnet_vn import params
 np.set_printoptions(precision=2, suppress=True)
 
 yamnet = YAMNet("zoo.yamnet_vn.params")
-yamnet.load_weights("zoo/yamnet_vn/finetune.h5")
+yamnet.load_weights("zoo/yamnet_vn/finetune_all.h5")
 
 mic = CustomMic(0.96, "Analog")
 
-th = 0.75
+th = 0.5
 labels = ["coot", "mallard"]
 while True:
     res = yamnet.mic_inference(mic, normalize=False).numpy()
@@ -17,5 +17,5 @@ while True:
     for i in range(params.NUM_CLASSES):
         if res[:,i] >= th:
             positives[labels[i]] = res[:,i]
-    #print(res)
+    print(res)
     print(positives)

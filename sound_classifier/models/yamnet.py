@@ -7,7 +7,7 @@ class YAMNet(SoundClassifier):
     def __init__(self, params_path) -> None:
         super().__init__(params_path)
     
-    def _create_model(self, tflite=False):
+    def _get_model_instance(self, tflite=False):
         self._YAMNET_LAYER_DEFS = [
             # (layer_function, kernel, stride, num_filters)
             (self._conv,          [3, 3], 2,   32),

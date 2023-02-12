@@ -1,0 +1,2 @@
+model_checkpoint_path: "yamnet_ase_quantized.h5_"
+all_model_checkpoint_paths: "yamnet_ase_quantized.h5_"

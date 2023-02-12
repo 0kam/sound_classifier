@@ -1,17 +1,14 @@
 from abc import ABC, abstractmethod
 import tensorflow as tf
+from keras.models import Sequential 
 from importlib import import_module
 from sound_classifier.core.audio_device import AudioDevice
 from scipy.signal import resample
 import numpy as np
 import math
-# Below is only required in training
-try:
-    from tensorflow_addons.metrics import MultiLabelConfusionMatrix
-    from audiomentations import Compose
-    from sound_classifier.core.data import StrongAudioSequence, load_audio
-except ModuleNotFoundError:
-    print("The classifier is only available with prediction mode!")
+from tensorflow_addons.metrics import MultiLabelConfusionMatrix
+from sound_classifier.core.data import StrongAudioSequence, load_audio
+import tensorflow_model_optimization as tfmot
 
 class ReducedAUC(tf.keras.metrics.Metric):
     def __init__(self, curve="PR", multi_label=True, reduce_method=tf.reduce_max, reduce_axis=1, **kwargs):
@@ -82,14 +79,15 @@ class ReducedMultiLabelConfusionMatrix(tf.keras.metrics.Metric):
 class SoundClassifier(ABC):
     def __init__(self, params_path) -> None:
         self.params = import_module(params_path)
-        self.model = self._create_model()
+        self.model = self._get_model_instance(tflite=False)
+        self.model.quantized = False 
         self.feature_extraction = self.model.layers[0]
         self.model_base = self.model.layers[1]
         self.model_top = self.model.layers[2]
         self.history = None
     
     @abstractmethod
-    def _create_model(self, tflite=False):
+    def _get_model_instance(self, tflite=False):
         pass
 
     def dataset(self, source_dir:str, label_dir:str, labels:list, pred_patch_sec:float, pred_hop_sec:float, \
@@ -106,14 +104,14 @@ class SoundClassifier(ABC):
             under_sample=under_sample,
             threshold=threshold, augmentations=augmentations)
     
-    def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, idx, reduce_method, reduce_axis, workers):
+    def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, idx, reduce_method, reduce_axis, workers=0):
         self.model.trainable = True
         if fine_tune:
             for layer in self.model_base.layers[:-idx]:
                 layer.trainable = False
         else:
             self.model_base.trainable = False
-        
+
         rmse = tf.keras.metrics.RootMeanSquaredError(name="metric_rmse")
         auc = ReducedAUC(reduce_method = reduce_method, reduce_axis = reduce_axis, name="metric_reduced_auc")
         self.model.compile(
@@ -203,3 +201,30 @@ class SoundClassifier(ABC):
         waveform = tf.expand_dims(waveform, 0)
         res = self.predict(waveform)
         return res
+    
+    def quantize_model(self, model):
+        if model.quantized:
+            raise ValueError("The model has already been quantized!")
+        feature_extraction = model.layers[0]
+        model_base = tfmot.quantization.keras.quantize_model(model.layers[1])
+        model_top = tfmot.quantization.keras.quantize_model(model.layers[2])
+        model_q = Sequential([
+            feature_extraction,
+            model_base,
+            model_top
+        ], name = model.name + "_quantized")
+        model_q.quantized = True
+        input_shape = math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)
+        model_q.build(input_shape=(None, input_shape))
+        return model_q
+    
+    def convert_to_tflite(self):
+        model = self._get_model_instance(tflite=True)
+        if self.model.quantized:
+            self.quantize_model()
+        model.set_weights(self.model.get_weights())
+        converter = tf.lite.TFLiteConverter.from_keras_model(model)
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        converter.target_spec.supported_types = [tf.float16]
+        tflite_model = converter.convert()
+        return tflite_model
