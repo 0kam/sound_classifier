@@ -1,11 +1,11 @@
 from sound_classifier.models.yamnet import YAMNet
 
 yamnet = YAMNet("zoo.yamnet_vn.params")
-yamnet.load_weights("zoo/yamnet_vn/finetune_all.h5")
+yamnet.load_weights("zoo/yamnet_vn/finetune.h5")
 
 import tensorflow as tf
 tflite_model = yamnet.convert_to_tflite()
-with open("zoo/yamnet_vn/yamnet_vn_finetune_all.tflite", "wb") as f:
+with open("zoo/yamnet_vn/yamnet_vn.tflite", "wb") as f:
     f.write(tflite_model)
 
 # Quantized model
