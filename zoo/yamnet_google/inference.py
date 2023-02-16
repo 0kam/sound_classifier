@@ -1,22 +1,17 @@
-import tensorflow as tf
-import tensorflow_io as tfio
 from sound_classifier.models.yamnet import YAMNet
-from zoo.yamnet_google import params
-from matplotlib import pyplot as plt
-import numpy as np
+from sound_classifier.core.audio_device import CustomMic
+import pandas as pd
 
 yamnet = YAMNet("zoo.yamnet_google.params")
 yamnet.load_weights("zoo/yamnet_google/yamnet.h5")
 
-from sound_classifier.core.audio_device import USBMic
-mic = USBMic(5)
+classes = pd.read_csv("zoo/yamnet_google/classes.csv")
+classes = classes.sort_values("index")
 
-a = mic.q.get()
+mic = CustomMic(0.96, "Analog")
+
 while True:
-    plt.ion()
-    waveform = mic.q.get()
-    waveform = tf.convert_to_tensor(waveform.astype(np.float32) / tf.int16.max)
-    waveform = tfio.audio.resample(waveform, mic.sampling_rate, params.SAMPLE_RATE)
-    yamnet.plot(waveform, False)
-    plt.pause(4)
-    plt.close()
+    y = yamnet.mic_inference(mic).numpy().squeeze()
+    classes["y"] = y
+    print(classes.query("y > 0.3"))
+    
