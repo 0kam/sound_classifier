@@ -69,3 +69,6 @@ class FCN(SoundClassifier):
     
     def evaluate(self, dataset, threshold=0.5, reduce_method=tf.reduce_max):
         return super().evaluate(dataset, threshold, reduce_method=reduce_method, reduce_axis=1)
+
+    def predict_file(self, path, th=0.5, overwrite=True, reduce_method=tf.reduce_max):
+        return super().predict_file(path, th, overwrite, reduce_method, reduce_axis=1)

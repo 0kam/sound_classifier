@@ -232,7 +232,7 @@ class SoundClassifier(ABC):
         tflite_model = converter.convert()
         return tflite_model
     
-    def predict_file(self, path, th = 0.5, overwrite = True):
+    def predict_file(self, path, th = 0.5, overwrite = True, reduce_method=None, reduce_axis=1):
         sr = self.params.SAMPLE_RATE
         step = int(sr * self.params.PATCH_WINDOW_SECONDS)
         waveform = load_audio(path, rate=sr)
@@ -245,6 +245,8 @@ class SoundClassifier(ABC):
             end = start + step
             a = tf.expand_dims(waveform[start:end], 0)
             y = self.predict(a).numpy().squeeze()
+            if reduce_method is not None:
+                y = reduce_method(y, reduce_axis)
             for j in range(self.params.NUM_CLASSES):
                 if y[j] >= th:
                     c = self.params.CLASSES[j]
