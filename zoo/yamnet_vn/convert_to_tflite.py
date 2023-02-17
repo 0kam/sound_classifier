@@ -1,7 +1,7 @@
 from sound_classifier.models.yamnet import YAMNet
 
 yamnet = YAMNet("zoo.yamnet_vn.params")
-yamnet.load_weights("zoo/yamnet_vn/finetune.h5")
+yamnet.load_weights("zoo/yamnet_vn/finetune_normalized.h5")
 
 import tensorflow as tf
 tflite_model = yamnet.convert_to_tflite()
