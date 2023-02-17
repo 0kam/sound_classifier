@@ -232,10 +232,10 @@ class SoundClassifier(ABC):
         tflite_model = converter.convert()
         return tflite_model
     
-    def predict_file(self, path, th = 0.5, overwrite = True, reduce_method=None, reduce_axis=1):
+    def predict_file(self, path, th = 0.5, overwrite = True, reduce_method=None, reduce_axis=1, normalize=False):
         sr = self.params.SAMPLE_RATE
         step = int(sr * self.params.PATCH_WINDOW_SECONDS)
-        waveform = load_audio(path, rate=sr)
+        waveform = load_audio(path, rate=sr, normalize=normalize)
         n = math.floor(waveform.shape[0] / step)
         out_path = path.replace(Path(path).suffix, ".txt")
         if overwrite & os.path.exists(out_path):

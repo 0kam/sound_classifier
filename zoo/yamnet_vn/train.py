@@ -30,6 +30,7 @@ ds = yamnet.dataset(
     patch_sec=params.PATCH_WINDOW_SECONDS,
     threshold = 0,
     augmentations = augs,
+    normalize=True
 )
 
 train_ds = ds.set_mode("train")

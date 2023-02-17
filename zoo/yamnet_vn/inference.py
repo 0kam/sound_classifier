@@ -7,8 +7,8 @@ np.set_printoptions(precision=2, suppress=True)
 yamnet = YAMNet("zoo.yamnet_vn.params")
 yamnet.load_weights("zoo/yamnet_vn/finetune.h5")
 
-path = "data/virtual_net_strong/test/shuka1.wav"
-yamnet.predict_file(path)
+path = "/home/okamoto/Projects/VirtualNet/swavs_14FEB2023/merged/kijo1.wav"
+yamnet.predict_file(path, normalize=True)
 
 mic = CustomMic(0.96, "Analog")
 
