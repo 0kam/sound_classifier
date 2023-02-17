@@ -19,6 +19,8 @@
 # so expect some variability in performance if you change these. The patch hop can
 # be changed arbitrarily: a smaller hop should give you more patches from the same
 # clip and possibly better performance at a larger computational cost.
+import pandas as pd
+
 SAMPLE_RATE = 16000
 STFT_WINDOW_SECONDS = 0.025
 STFT_HOP_SECONDS = 0.010
@@ -32,6 +34,8 @@ PATCH_HOP_SECONDS = 0.48
 PATCH_FRAMES = int(round(PATCH_WINDOW_SECONDS / STFT_HOP_SECONDS))
 PATCH_BANDS = MEL_BANDS
 NUM_CLASSES = 521
+CLASSES = pd.read_csv("zoo/yamnet_google/classes.csv").\
+    sort_values("index")["class"].values.tolist()
 CONV_PADDING = 'same'
 BATCHNORM_CENTER = True
 BATCHNORM_SCALE = False
@@ -40,5 +44,3 @@ CLASSIFIER_ACTIVATION = 'sigmoid'
 
 FEATURES_LAYER_NAME = 'features'
 EXAMPLE_PREDICTIONS_LAYER_NAME = 'predictions'
-
-CLASSES = "sound_classifier/yamnet_google/classes.csv"

@@ -9,6 +9,9 @@ import math
 from tensorflow_addons.metrics import MultiLabelConfusionMatrix
 from sound_classifier.core.data import StrongAudioSequence, load_audio
 import tensorflow_model_optimization as tfmot
+from pathlib import Path
+from tqdm import tqdm
+import os
 
 class ReducedAUC(tf.keras.metrics.Metric):
     def __init__(self, curve="PR", multi_label=True, reduce_method=tf.reduce_max, reduce_axis=1, **kwargs):
@@ -228,3 +231,27 @@ class SoundClassifier(ABC):
         converter.target_spec.supported_types = [tf.float16]
         tflite_model = converter.convert()
         return tflite_model
+    
+    def predict_file(self, path, th = 0.5, overwrite = True):
+        sr = self.params.SAMPLE_RATE
+        step = int(sr * self.params.PATCH_WINDOW_SECONDS)
+        waveform = load_audio(path, rate=sr)
+        n = math.floor(waveform.shape[0] / step)
+        out_path = path.replace(Path(path).suffix, ".txt")
+        if overwrite & os.path.exists(out_path):
+            os.remove(out_path)
+        for i in tqdm(range(n)):
+            start = i * step
+            end = start + step
+            a = tf.expand_dims(waveform[start:end], 0)
+            y = self.predict(a).numpy().squeeze()
+            for j in range(self.params.NUM_CLASSES):
+                if y[j] >= th:
+                    c = self.params.CLASSES[j]
+                    s = start / sr
+                    e = end / sr
+                    with open(out_path, mode='a') as f:
+                        f.write("{}\t{}\t{}\n".format(s, e, c))
+
+            
+        

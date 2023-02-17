@@ -5,7 +5,10 @@ from zoo.yamnet_vn import params
 np.set_printoptions(precision=2, suppress=True)
 
 yamnet = YAMNet("zoo.yamnet_vn.params")
-yamnet.load_weights("zoo/yamnet_vn/finetune_all.h5")
+yamnet.load_weights("zoo/yamnet_vn/finetune.h5")
+
+path = "data/virtual_net_strong/test/shuka1.wav"
+yamnet.predict_file(path)
 
 mic = CustomMic(0.96, "Analog")
 
