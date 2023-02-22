@@ -34,9 +34,7 @@ def load_audio(path:str, rate:int = 16000, normalize = False):
             waveform = waveform / tf.int16.max
         waveform = tfio.audio.resample(waveform, audio.rate.numpy(), rate)
         if normalize:
-            mu = waveform.numpy().mean()
-            sigma = abs(waveform.numpy()).std()
-            waveform = (waveform / sigma) - mu
+            waveform = waveform / (waveform.numpy().max() - waveform.numpy().min()) * 2
         return waveform[:,0]
 
 def save_audio(waveform, path, rate):
