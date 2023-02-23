@@ -14,8 +14,8 @@ yamnet.load_weights(
 augs = None
 
 augs = Compose([
-    Gain(min_gain_in_db = -10, max_gain_in_db=0, p = 0.5),
-    AirAbsorption(),
+    Gain(min_gain_in_db = -20, max_gain_in_db=0, p = 0.75),
+    AirAbsorption(p=0.75),
     TanhDistortion(),
     PitchShift(),
     AddGaussianNoise()
@@ -44,9 +44,10 @@ res1
 
 yamnet.save_weights("zoo/yamnet_vn/transfer.h5", model_base = False)
 
-for i in range(3):
+for i in range(7):
     optim_finetune = RectifiedAdam(learning_rate = 5e-5)
     yamnet.train(10, train_ds, val_ds, optim_finetune, fine_tune=True, n_layers=(i + 1) * 2, workers=12)
     yamnet.evaluate(val_ds, 0.5)
-
-yamnet.save_weights("zoo/yamnet_vn/finetune.h5", model_base = False)
+    out = "zoo/yamnet_vn/finetune_{}.h5".format((i + 1) * 2)
+    print(out)
+    yamnet.save_weights(out, model_base = False)
