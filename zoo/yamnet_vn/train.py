@@ -30,7 +30,7 @@ ds = yamnet.dataset(
     patch_sec=params.PATCH_WINDOW_SECONDS,
     threshold = 0,
     augmentations = augs,
-    normalize=True
+    normalize=False
 )
 
 train_ds = ds.set_mode("train")
@@ -42,11 +42,11 @@ yamnet.train(20, train_ds, val_ds, optim_top, fine_tune=False, workers=12)
 res1 = yamnet.evaluate(val_ds, 0.5)
 res1
 
-yamnet.save_weights("zoo/yamnet_vn/transfer_normalized.h5", model_base = False)
+yamnet.save_weights("zoo/yamnet_vn/transfer.h5", model_base = False)
 
 for i in range(3):
     optim_finetune = RectifiedAdam(learning_rate = 5e-5)
     yamnet.train(10, train_ds, val_ds, optim_finetune, fine_tune=True, n_layers=(i + 1) * 2, workers=12)
     yamnet.evaluate(val_ds, 0.5)
 
-yamnet.save_weights("zoo/yamnet_vn/finetune_normalized.h5", model_base = False)
+yamnet.save_weights("zoo/yamnet_vn/finetune.h5", model_base = False)
