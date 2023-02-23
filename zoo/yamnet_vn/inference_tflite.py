@@ -11,7 +11,7 @@ np.set_printoptions(precision=2, suppress=True)
 th = 0.75
 
 # Set interpreter
-interpreter = tflite.Interpreter(model_path = "zoo/yamnet_vn/finetune.tflite")
+interpreter = tflite.Interpreter(model_path = "zoo/yamnet_vn/yamnet_vn.tflite")
 interpreter.allocate_tensors()
 
 # Get model I/O
@@ -19,7 +19,7 @@ input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
 # Run inference
-mic = CustomMic(0.96, "USB")
+mic = CustomMic(0.96, "Analog")
 labels = ["coot", "mallard"]
 while True:
     waveform = mic.q.get()
