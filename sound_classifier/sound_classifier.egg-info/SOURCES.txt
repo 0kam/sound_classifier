@@ -1,6 +1,15 @@
 LICENSE
 README.md
 setup.py
+sound_classifier/__init__.py
+sound_classifier/core/__init__.py
+sound_classifier/core/audio_device.py
+sound_classifier/core/data.py
+sound_classifier/core/features.py
+sound_classifier/core/sound_classifier.py
+sound_classifier/models/__init__.py
+sound_classifier/models/fcn.py
+sound_classifier/models/yamnet.py
 sound_classifier/sound_classifier.egg-info/PKG-INFO
 sound_classifier/sound_classifier.egg-info/SOURCES.txt
 sound_classifier/sound_classifier.egg-info/dependency_links.txt

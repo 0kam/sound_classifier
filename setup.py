@@ -13,7 +13,7 @@ def _requires_from_file(filename):
 
 
 setup(
-    name="sound-classifier",
+    name="sound_classifier",
     version="0.1.0",
     license=license,
     description="Training and deploying deep sound classifiers, especially for bio-acoustic monitorings.",
@@ -21,7 +21,7 @@ setup(
     url="https://github.com/0kam/sound_classifier",
     packages=find_packages("sound_classifier"),
     package_dir={"": "sound_classifier"},
-    py_modules=[splitext(basename(path))[0] for path in glob('sound_classifier/*.py')],
+    py_modules=[splitext(basename(path))[0] for path in glob('sound_classifier/**/*.py')],
     include_package_data=True,
     zip_safe=False,
     install_requires=_requires_from_file('requirements.txt'),
