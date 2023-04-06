@@ -13,7 +13,7 @@ def _requires_from_file(filename):
 
 
 setup(
-    name="sound_classifier",
+    name="sound-classifier",
     version="0.1.0",
     license=license,
     description="Training and deploying deep sound classifiers, especially for bio-acoustic monitorings.",
