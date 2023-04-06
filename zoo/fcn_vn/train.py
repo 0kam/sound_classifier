@@ -33,7 +33,7 @@ a, l = train_ds[0]
 l2 = fcn.model(a)
 
 import tensorflow as tf
-from soundclassifier.core.sound_classifier import ReducedAUC
+from soundclassifier.core.soundclassifier import ReducedAUC
 auc = ReducedAUC(reduce_method=tf.reduce_mean, reduce_axis=1)
 auc.update_state(l, l2)
 auc.result()

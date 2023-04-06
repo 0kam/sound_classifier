@@ -1,4 +1,4 @@
-from soundclassifier.core.sound_classifier import SoundClassifier
+from soundclassifier.core.soundclassifier import SoundClassifier
 from soundclassifier.core.features import LogMelSpectrogram
 from keras import Model, Sequential, layers
 import math
