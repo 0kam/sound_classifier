@@ -1,6 +1,11 @@
 # sound_classifier
 Training and deploying deep sound classifiers, especially for bio-acoustic monitorings.
 
+## Installation
+```
+python3 -m pip install git+https://github.com/0kam/sound_classifier
+```
+
 ## Requirements
 ```
 # For inference

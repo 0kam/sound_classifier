@@ -14,8 +14,8 @@ yamnet.load_weights(
 augs = None
 
 augs = Compose([
-    Gain(min_gain_in_db = -15, max_gain_in_db=0, p = 0.75),
-    AirAbsorption(p=0.75),
+    Gain(min_gain_in_db = -15, max_gain_in_db=0, p = 0.5),
+    AirAbsorption(p=0.5),
     TanhDistortion(),
     PitchShift(),
     AddGaussianNoise()
