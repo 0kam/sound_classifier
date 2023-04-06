@@ -141,7 +141,7 @@ class StrongAudioSequence(Sequence):
             random.shuffle(self.label_files)
         self.source_files = []
         for l in self.label_files:
-            f = glob(source_dir + "/**/" + Path(l).stem + ".*")[0]
+            f = glob(source_dir + "/**/" + Path(l).stem + ".*", recursive=True)[0]
             self.source_files.append(f)
         index = range(len(self.label_files))
         self.label_files
