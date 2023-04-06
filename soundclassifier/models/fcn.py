@@ -1,5 +1,5 @@
-from sound_classifier.core.sound_classifier import SoundClassifier
-from sound_classifier.core.features import LogMelSpectrogram
+from soundclassifier.core.sound_classifier import SoundClassifier
+from soundclassifier.core.features import LogMelSpectrogram
 from keras import Sequential, layers
 import tensorflow as tf
 import math

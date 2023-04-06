@@ -2,12 +2,12 @@ from abc import ABC, abstractmethod
 import tensorflow as tf
 from keras.models import Sequential 
 from importlib import import_module
-from sound_classifier.core.audio_device import AudioDevice
+from soundclassifier.core.audio_device import AudioDevice
 from scipy.signal import resample
 import numpy as np
 import math
 from tensorflow_addons.metrics import MultiLabelConfusionMatrix
-from sound_classifier.core.data import StrongAudioSequence, load_audio
+from soundclassifier.core.data import StrongAudioSequence, load_audio
 import tensorflow_model_optimization as tfmot
 from pathlib import Path
 from tqdm import tqdm

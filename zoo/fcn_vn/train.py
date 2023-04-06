@@ -1,4 +1,4 @@
-from sound_classifier.models.fcn import FCN
+from soundclassifier.models.fcn import FCN
 from zoo.fcn_vn import params
 from tensorflow_addons.optimizers import RectifiedAdam
 from tensorflow import optimizers as optim
@@ -33,7 +33,7 @@ a, l = train_ds[0]
 l2 = fcn.model(a)
 
 import tensorflow as tf
-from sound_classifier.core.sound_classifier import ReducedAUC
+from soundclassifier.core.sound_classifier import ReducedAUC
 auc = ReducedAUC(reduce_method=tf.reduce_mean, reduce_axis=1)
 auc.update_state(l, l2)
 auc.result()

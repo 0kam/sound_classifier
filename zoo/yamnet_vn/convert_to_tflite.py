@@ -1,4 +1,4 @@
-from sound_classifier.models.yamnet import YAMNet
+from soundclassifier.models.yamnet import YAMNet
 
 yamnet = YAMNet("zoo.yamnet_vn.params")
 yamnet.load_weights("zoo/yamnet_vn/finetune.h5")

@@ -1,4 +1,4 @@
-from sound_classifier.models.fcn import FCN
+from soundclassifier.models.fcn import FCN
 
 fcn = FCN("zoo.fcn_vn.params")
 fcn.load_weights("zoo/fcn_vn/fcn.h5")

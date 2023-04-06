@@ -1,5 +1,5 @@
-from sound_classifier.models.yamnet import YAMNet
-from sound_classifier.core.audio_device import CustomMic, USBMic
+from soundclassifier.models.yamnet import YAMNet
+from soundclassifier.core.audio_device import CustomMic, USBMic
 import numpy as np
 from zoo.yamnet_vn import params
 np.set_printoptions(precision=2, suppress=True)

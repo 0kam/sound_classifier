@@ -1,4 +1,4 @@
-from sound_classifier.models.yamnet import YAMNet
+from soundclassifier.models.yamnet import YAMNet
 from zoo.yamnet_vn import params
 from tensorflow_addons.optimizers import RectifiedAdam
 from tensorflow import optimizers as optim

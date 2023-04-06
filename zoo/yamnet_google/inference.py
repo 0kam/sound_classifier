@@ -1,5 +1,5 @@
-from sound_classifier.models.yamnet import YAMNet
-from sound_classifier.core.audio_device import CustomMic
+from soundclassifier.models.yamnet import YAMNet
+from soundclassifier.core.audio_device import CustomMic
 import pandas as pd
 
 yamnet = YAMNet("zoo.yamnet_google.params")

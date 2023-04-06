@@ -1,4 +1,4 @@
-from sound_classifier.core.audio_device import CustomMic
+from soundclassifier.core.audio_device import CustomMic
 import numpy as np
 from zoo.yamnet_vn import params
 from scipy.signal import resample

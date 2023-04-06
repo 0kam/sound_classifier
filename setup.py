@@ -13,15 +13,15 @@ def _requires_from_file(filename):
 
 
 setup(
-    name="sound_classifier",
+    name="soundclassifier",
     version="0.1.0",
     license=license,
     description="Training and deploying deep sound classifiers, especially for bio-acoustic monitorings.",
     author="Ryotaro Okamoto",
     url="https://github.com/0kam/sound_classifier",
-    packages=find_packages("sound_classifier"),
-    package_dir={"": "sound_classifier"},
-    py_modules=[splitext(basename(path))[0] for path in glob('sound_classifier/**/*.py')],
+    packages=find_packages("soundclassifier"),
+    package_dir={"": "soundclassifier"},
+    py_modules=[splitext(basename(path))[0] for path in glob('soundclassifier/**/*.py')],
     include_package_data=True,
     zip_safe=False,
     install_requires=_requires_from_file('requirements.txt'),
