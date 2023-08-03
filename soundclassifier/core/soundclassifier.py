@@ -7,11 +7,14 @@ from scipy.signal import resample
 import numpy as np
 import math
 from tensorflow_addons.metrics import MultiLabelConfusionMatrix
+from sklearn.metrics import confusion_matrix
 from soundclassifier.core.data import StrongAudioSequence, load_audio
 import tensorflow_model_optimization as tfmot
 from pathlib import Path
 from tqdm import tqdm
 import os
+import matplotlib.pyplot as plt
+import itertools
 
 class ReducedAUC(tf.keras.metrics.Metric):
     def __init__(self, curve="PR", multi_label=True, reduce_method=tf.reduce_max, reduce_axis=1, **kwargs):
@@ -107,7 +110,7 @@ class SoundClassifier(ABC):
             under_sample=under_sample,
             threshold=threshold, augmentations=augmentations)
     
-    def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, idx, reduce_method, reduce_axis, workers=0):
+    def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, idx, reduce_method, reduce_axis, workers=0, early_stopping=5, reduce_lr=3):
         self.model.trainable = True
         if fine_tune:
             for layer in self.model_base.layers[:-idx]:
@@ -126,12 +129,12 @@ class SoundClassifier(ABC):
         callbacks = [
             tf.keras.callbacks.EarlyStopping(
                 monitor='val_loss',
-                patience=5,
+                patience=early_stopping,
                 restore_best_weights=True),
             tf.keras.callbacks.ReduceLROnPlateau(
                 monitor="val_loss",
-                factor=0.1,
-                patience=3
+                factor=0.5,
+                patience=reduce_lr
             )
         ]
 
@@ -148,7 +151,7 @@ class SoundClassifier(ABC):
             workers = workers
         )
     
-    def evaluate(self, dataset, threshold, reduce_method, reduce_axis):
+    def evaluate(self, dataset, threshold, reduce_method, reduce_axis, fig_path = None):
         conf = ReducedMultiLabelConfusionMatrix(num_classes=self.params.NUM_CLASSES, reduce_method=reduce_method, reduce_axis=reduce_axis, name="reduced_confusion_matrix")
         y_pred = []
         y_true = []
@@ -162,8 +165,34 @@ class SoundClassifier(ABC):
         y_pred[y_pred != 1] = 0
         y_true[y_true != 1] = 0
         conf.reset_state()
-        conf.update_state(y_true.astype(int), y_pred.astype(int))
-        return conf.result().numpy()
+        conf.update_state(y_true, y_pred)
+
+        y_pred2 = np.array([self.params.CLASSES[y] for y in y_pred.argmax(1)])
+        y_true2 = np.array([self.params.CLASSES[y] for y in y_true.argmax(1)])
+        y_pred2[y_pred.max(1) == 0] = "others"
+        y_true2[y_true.max(1) == 0] = "others"
+        
+        confmat = confusion_matrix(y_true2, y_pred2, labels = self.params.CLASSES + ["others"])
+        print(confmat)
+        if fig_path is not None:
+            plt.figure(figsize=(10, 10))
+            plt.imshow(confmat, interpolation='nearest', cmap=plt.cm.Blues)
+            plt.title("Confusion Matrix")
+            plt.colorbar()
+            tick_marks = np.arange(len(self.params.CLASSES) + 1)
+            plt.xticks(tick_marks, self.params.CLASSES + ["others"], rotation=45)
+            plt.yticks(tick_marks, self.params.CLASSES + ["others"])
+            # 数値を格子状に表示
+            thresh = confmat.max() / 2.
+            for i, j in itertools.product(range(confmat.shape[0]), range(confmat.shape[1])):
+                plt.text(j, i, confmat[i, j],
+                        horizontalalignment="center",
+                        color="white" if confmat[i, j] > thresh else "black")
+            plt.tight_layout()
+            plt.ylabel('True label')
+            plt.xlabel('Predicted label')
+            plt.savefig(fig_path, bbox_inches='tight')
+        return conf.result().numpy(), confmat
 
     def predict(self, waveform):
         return self.model(waveform)

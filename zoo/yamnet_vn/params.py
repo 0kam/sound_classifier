@@ -10,8 +10,8 @@ PATCH_HOP_SECONDS = 0.096
 
 PATCH_FRAMES = int(round(PATCH_WINDOW_SECONDS / STFT_HOP_SECONDS))
 PATCH_BANDS = MEL_BANDS
-NUM_CLASSES = 2
-CLASSES = ["coot", "mallard"]
+NUM_CLASSES = 9
+CLASSES = ["ooban", "magamo", "aosagi","goisagi", "hashibiro", "hidori", "kogamo", "okayoshi", "yoshi"]
 CONV_PADDING = 'same'
 BATCHNORM_CENTER = True
 BATCHNORM_SCALE = False
@@ -20,5 +20,5 @@ CLASSIFIER_ACTIVATION = 'sigmoid'
 
 FEATURES_LAYER_NAME = 'my_features'
 EXAMPLE_PREDICTIONS_LAYER_NAME = 'my_predictions'
-BATCH_SIZE = 20
+BATCH_SIZE = 100
 QUANTIZE = True

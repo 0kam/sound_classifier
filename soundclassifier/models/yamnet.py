@@ -107,9 +107,10 @@ class YAMNet(SoundClassifier):
             return output
         return _separable_conv_layer
     
-    def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, n_layers=3, workers=0):
-        return super().train(epochs, train_ds, val_ds, optimizer=optimizer, \
-            fine_tune=fine_tune, idx = (n_layers * 6) + 1, reduce_method=None, reduce_axis=0, workers=workers)
+    def train(self, epochs, train_ds, val_ds, optimizer, fine_tune, n_layers=3, workers=0, early_stopping=5, reduce_lr=3):
+        return super().train(epochs, train_ds, val_ds, optimizer=optimizer,
+            fine_tune=fine_tune, idx = (n_layers * 6) + 1, reduce_method=None, reduce_axis=0, workers=workers,
+            early_stopping=early_stopping, reduce_lr=reduce_lr)
     
-    def evaluate(self, dataset, threshold=0.5):
-        return super().evaluate(dataset, threshold, reduce_method=None, reduce_axis=0)
+    def evaluate(self, dataset, threshold=0.5, fig_path=None):
+        return super().evaluate(dataset, threshold, reduce_method=None, reduce_axis=0, fig_path=fig_path)
