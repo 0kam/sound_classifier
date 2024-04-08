@@ -31,7 +31,7 @@ class YAMNet(SoundClassifier):
         
         # Loading audio and converting it to Log-Mel Spectrogram
         input_shape = math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)
-        waveform = layers.Input(shape = (input_shape))
+        waveform = layers.Input(shape = (input_shape,))
         feature_extraction = LogMelSpectrogram(
             rate=self.params.SAMPLE_RATE, stft_win_sec=self.params.STFT_WINDOW_SECONDS,
             stft_hop_sec=self.params.STFT_HOP_SECONDS, mel_bands=self.params.MEL_BANDS,
