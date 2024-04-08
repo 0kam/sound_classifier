@@ -31,7 +31,7 @@ class YAMNet(SoundClassifier):
         
         # Loading audio and converting it to Log-Mel Spectrogram
         input_shape = math.floor(self.params.SAMPLE_RATE * self.params.PATCH_WINDOW_SECONDS)
-        waveform = layers.Input(shape = (input_shape,))
+        waveform = layers.Input(shape = [input_shape])
         feature_extraction = LogMelSpectrogram(
             rate=self.params.SAMPLE_RATE, stft_win_sec=self.params.STFT_WINDOW_SECONDS,
             stft_hop_sec=self.params.STFT_HOP_SECONDS, mel_bands=self.params.MEL_BANDS,
@@ -75,38 +75,38 @@ class YAMNet(SoundClassifier):
 
     def _conv(self, name, kernel, stride, filters):
         def _conv_layer(layer_input):
-            output = layers.Conv2D(name='{}/conv'.format(name),
+            output = layers.Conv2D(name='{}_conv'.format(name),
                                filters=filters,
                                kernel_size=kernel,
                                strides=stride,
                                padding=self.params.CONV_PADDING,
                                use_bias=False,
                                activation=None)(layer_input)
-            output = self._batch_norm(name='{}/conv/bn'.format(name))(output)
-            output = layers.ReLU(name='{}/relu'.format(name))(output)
+            output = self._batch_norm(name='{}_conv_bn'.format(name))(output)
+            output = layers.ReLU(name='{}_relu'.format(name))(output)
             return output
         return _conv_layer
     
     def _separable_conv(self, name, kernel, stride, filters):
         def _separable_conv_layer(layer_input):
-            output = layers.DepthwiseConv2D(name='{}/depthwise_conv'.format(name),
+            output = layers.DepthwiseConv2D(name='{}_depthwise_conv'.format(name),
                                     kernel_size=kernel,
                                     strides=stride,
                                     depth_multiplier=1,
                                     padding=self.params.CONV_PADDING,
                                     use_bias=False,
                                     activation=None)(layer_input)
-            output = self._batch_norm(name='{}/depthwise_conv/bn'.format(name))(output)
-            output = layers.ReLU(name='{}/depthwise_conv/relu'.format(name))(output)
-            output = layers.Conv2D(name='{}/pointwise_conv'.format(name),
+            output = self._batch_norm(name='{}_depthwise_conv_bn'.format(name))(output)
+            output = layers.ReLU(name='{}_depthwise_conv_relu'.format(name))(output)
+            output = layers.Conv2D(name='{}_pointwise_conv'.format(name),
                            filters=filters,
                            kernel_size=(1, 1),
                            strides=1,
                            padding=self.params.CONV_PADDING,
                            use_bias=False,
                            activation=None)(output)
-            output = self._batch_norm(name='{}/pointwise_conv/bn'.format(name))(output)
-            output = layers.ReLU(name='{}/pointwise_conv/relu'.format(name))(output)
+            output = self._batch_norm(name='{}_pointwise_conv_bn'.format(name))(output)
+            output = layers.ReLU(name='{}_pointwise_conv_relu'.format(name))(output)
             return output
         return _separable_conv_layer
     

@@ -1,5 +1,5 @@
 from kapre.time_frequency_tflite import STFTTflite, MagnitudeTflite
-from kapre.time_frequency import STFT, Magnitude
+from kapre.time_frequency import STFT
 from keras.models import Model
 import tensorflow as tf
 import numpy as np
@@ -49,7 +49,6 @@ class LogMelSpectrogram(Model):
                 n_fft=self.fft_length, win_length=self.window_length_samples,
                 hop_length=self.hop_length_samples, pad_begin=pad_begin, pad_end=pad_end
             )
-            self.magnitude = Magnitude()
 
         # magnitude_spectrogram has shape [stft_frames, num_spectrogram_bins]
         # Convert spectrogram into log mel spectrogram.
@@ -64,7 +63,7 @@ class LogMelSpectrogram(Model):
     def call(self, input_tensor, training=False):
         x = tf.expand_dims(input_tensor, 2)
         x = self.stft(x)
-        x = self.magnitude(x)
+        x = tf.abs(x)
         x = tf.squeeze(x, axis = -1) # Squeeze the channel dimension
         x = tf.matmul(x, self.linear_to_mel_weight_matrix)
         x = tf.math.log(x + self.log_offset)
