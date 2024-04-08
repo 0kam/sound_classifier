@@ -9,3 +9,5 @@ numpy
 pandas
 pyaudio
 tqdm
+mlflow
+omegaconf

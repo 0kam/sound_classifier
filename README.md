@@ -28,6 +28,8 @@ tqdm
 pandas
 numpy
 scypi
+mlflow
+omegaconf
 ```
 
 ## Modules
