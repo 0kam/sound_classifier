@@ -4,8 +4,11 @@ from keras import Model, Sequential, layers
 import math
 
 class YAMNet(SoundClassifier):
-    def __init__(self, params_path) -> None:
-        super().__init__(params_path)
+    def __init__(self, params) -> None:
+        params = params.params
+        self.PATCH_FRAMES = int(round(params.PATCH_WINDOW_SECONDS / params.STFT_HOP_SECONDS))
+        self.PATCH_BANDS = params.MEL_BANDS
+        super().__init__(params)
     
     def _get_model_instance(self, tflite=False):
         self._YAMNET_LAYER_DEFS = [
@@ -38,8 +41,8 @@ class YAMNet(SoundClassifier):
         spec = feature_extraction(waveform)
         # Extracting YAMNet features
         h = layers.Reshape(
-            (self.params.PATCH_FRAMES, self.params.PATCH_BANDS, 1),
-            input_shape=(self.params.PATCH_FRAMES, self.params.PATCH_BANDS)
+            (self.PATCH_FRAMES, self.PATCH_BANDS, 1),
+            input_shape=(self.PATCH_FRAMES, self.PATCH_BANDS)
         )(spec)
         for (i, (layer_fun, kernel, stride, filters)) in enumerate(self._YAMNET_LAYER_DEFS):
             h = layer_fun('layer{}'.format(i + 1), kernel, stride, filters)(h)
@@ -112,5 +115,5 @@ class YAMNet(SoundClassifier):
             fine_tune=fine_tune, idx = (n_layers * 6) + 1, reduce_method=None, reduce_axis=0, workers=workers,
             early_stopping=early_stopping, reduce_lr=reduce_lr)
     
-    def evaluate(self, dataset, threshold=0.5, fig_path=None):
-        return super().evaluate(dataset, threshold, reduce_method=None, reduce_axis=0, fig_path=fig_path)
+    def evaluate(self, dataset, threshold=0.5):
+        return super().evaluate(dataset, threshold, reduce_method=None, reduce_axis=0)

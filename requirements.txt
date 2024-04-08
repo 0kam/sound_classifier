@@ -1,6 +1,5 @@
 tensorflow
 tensorflow_io
-tensorflow_addons
 tensorflow_model_optimization
 keras
 kapre

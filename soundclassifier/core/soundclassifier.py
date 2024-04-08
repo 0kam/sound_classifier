@@ -3,11 +3,11 @@ import tensorflow as tf
 from keras.models import Sequential 
 from importlib import import_module
 from soundclassifier.core.audio_device import AudioDevice
+from soundclassifier.core.utils import MultiLabelConfusionMatrix
 from scipy.signal import resample
 import numpy as np
 import math
-from tensorflow_addons.metrics import MultiLabelConfusionMatrix
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, recall_score, f1_score, precision_score
 from soundclassifier.core.data import StrongAudioSequence, load_audio
 import tensorflow_model_optimization as tfmot
 from pathlib import Path
@@ -15,6 +15,7 @@ from tqdm import tqdm
 import os
 import matplotlib.pyplot as plt
 import itertools
+from omegaconf import DictConfig
 
 class ReducedAUC(tf.keras.metrics.Metric):
     def __init__(self, curve="PR", multi_label=True, reduce_method=tf.reduce_max, reduce_axis=1, **kwargs):
@@ -83,8 +84,9 @@ class ReducedMultiLabelConfusionMatrix(tf.keras.metrics.Metric):
         self.conf.reset_state()
 
 class SoundClassifier(ABC):
-    def __init__(self, params_path) -> None:
-        self.params = import_module(params_path)
+    def __init__(self, params:DictConfig) -> None:
+        # self.params = import_module(params_path)
+        self.params = params
         self.model = self._get_model_instance(tflite=False)
         self.model.quantized = False 
         self.feature_extraction = self.model.layers[0]
@@ -151,7 +153,7 @@ class SoundClassifier(ABC):
             workers = workers
         )
     
-    def evaluate(self, dataset, threshold, reduce_method, reduce_axis, fig_path = None):
+    def evaluate(self, dataset, threshold, reduce_method, reduce_axis):
         conf = ReducedMultiLabelConfusionMatrix(num_classes=self.params.NUM_CLASSES, reduce_method=reduce_method, reduce_axis=reduce_axis, name="reduced_confusion_matrix")
         y_pred = []
         y_true = []
@@ -167,32 +169,41 @@ class SoundClassifier(ABC):
         conf.reset_state()
         conf.update_state(y_true, y_pred)
 
-        y_pred2 = np.array([self.params.CLASSES[y] for y in y_pred.argmax(1)])
-        y_true2 = np.array([self.params.CLASSES[y] for y in y_true.argmax(1)])
+        y_pred2 = np.array([self.params.CLASSES[int(y)] for y in y_pred.argmax(1)])
+        y_true2 = np.array([self.params.CLASSES[int(y)] for y in y_true.argmax(1)])
         y_pred2[y_pred.max(1) == 0] = "others"
         y_true2[y_true.max(1) == 0] = "others"
         
         confmat = confusion_matrix(y_true2, y_pred2, labels = self.params.CLASSES + ["others"])
-        print(confmat)
-        if fig_path is not None:
-            plt.figure(figsize=(10, 10))
-            plt.imshow(confmat, interpolation='nearest', cmap=plt.cm.Blues)
-            plt.title("Confusion Matrix")
-            plt.colorbar()
-            tick_marks = np.arange(len(self.params.CLASSES) + 1)
-            plt.xticks(tick_marks, self.params.CLASSES + ["others"], rotation=45)
-            plt.yticks(tick_marks, self.params.CLASSES + ["others"])
-            # 数値を格子状に表示
-            thresh = confmat.max() / 2.
-            for i, j in itertools.product(range(confmat.shape[0]), range(confmat.shape[1])):
-                plt.text(j, i, confmat[i, j],
-                        horizontalalignment="center",
-                        color="white" if confmat[i, j] > thresh else "black")
-            plt.tight_layout()
-            plt.ylabel('True label')
-            plt.xlabel('Predicted label')
-            plt.savefig(fig_path, bbox_inches='tight')
-        return conf.result().numpy(), confmat
+        fig = plt.figure(figsize=(10, 10))
+        plt.imshow(confmat, interpolation='nearest', cmap=plt.cm.Blues)
+        plt.title("Confusion Matrix")
+        plt.colorbar()
+        tick_marks = np.arange(len(self.params.CLASSES) + 1)
+        plt.xticks(tick_marks, self.params.CLASSES + ["others"], rotation=45)
+        plt.yticks(tick_marks, self.params.CLASSES + ["others"])
+        # 数値を格子状に表示
+        thresh = confmat.max() / 2.
+        for i, j in itertools.product(range(confmat.shape[0]), range(confmat.shape[1])):
+            plt.text(j, i, confmat[i, j],
+                    horizontalalignment="center",
+                    color="white" if confmat[i, j] > thresh else "black")
+        plt.tight_layout()
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+
+        confs = conf.result().numpy()
+        tps = np.array([confs[i, 1, 1] for i in range(confs.shape[0])])
+        tns = np.array([confs[i, 0, 0] for i in range(confs.shape[0])])
+        fps = np.array([confs[i, 0, 1] for i in range(confs.shape[0])])
+        fns = np.array([confs[i, 1, 0] for i in range(confs.shape[0])])
+        recalls = tps / (tps + fns)
+        precisions = tps / (tps + fps)
+        f1s = 2 * precisions * recalls / (precisions + recalls)
+        f1s[np.isnan(f1s)] = 0
+        recalls[np.isnan(recalls)] = 0
+        precisions[np.isnan(precisions)] = 0
+        return recalls, precisions, f1s, confmat, fig
 
     def predict(self, waveform):
         return self.model(waveform)

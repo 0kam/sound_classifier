@@ -248,7 +248,7 @@ class StrongAudioSequence(Sequence):
             audio = self.augmentations(audio.numpy(), self.rate)
             audio = tf.convert_to_tensor(audio)
         return audio, label
-    
+
     @classmethod
     def others_label(cls, in_dir, out_dir):
         for f in glob(in_dir + "/**/*.wav", recursive=True):

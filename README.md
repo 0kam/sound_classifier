@@ -20,7 +20,6 @@ scipy # for audio resampling
 
 # For training
 tensorflow (tested on 2.10.0)
-tensorflow_addons
 tensorflow-io
 kapre
 audiomentations
@@ -55,8 +54,3 @@ scypi
   Each directory contains Python scripts for training and inferencing the model. Also, some models supports TensorFlowLite inferencing for edge and mobile applications.
   - yamnet_google (!!under construction)  
     The original YAMNet
-  - yamnet_vn  
-    An YAMNet-based model for detecting two bird species that damages lotus roots (i.e., mallards and coots)
-  - fcn_vn  
-    An FCN-based model for detecting two bird species that damages lotus roots (i.e., mallards and coots)
-
