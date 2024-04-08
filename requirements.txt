@@ -11,3 +11,4 @@ pyaudio
 tqdm
 mlflow
 omegaconf
+audiomentations
