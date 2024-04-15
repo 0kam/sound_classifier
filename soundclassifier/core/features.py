@@ -43,12 +43,13 @@ class LogMelSpectrogram(Model):
                 n_fft=self.fft_length, win_length=self.window_length_samples,
                 hop_length=self.hop_length_samples, pad_begin=pad_begin, pad_end=pad_end
             )
-            self.magnitude = MagnitudeTflite()
+            self.magnitude = lambda x: tf.norm(x, ord='euclidean', axis=-1)
         else:
             self.stft = STFT(
                 n_fft=self.fft_length, win_length=self.window_length_samples,
                 hop_length=self.hop_length_samples, pad_begin=pad_begin, pad_end=pad_end
             )
+            self.magnitude = lambda x: tf.abs(x)
 
         # magnitude_spectrogram has shape [stft_frames, num_spectrogram_bins]
         # Convert spectrogram into log mel spectrogram.
@@ -63,7 +64,7 @@ class LogMelSpectrogram(Model):
     def call(self, input_tensor, training=False):
         x = tf.expand_dims(input_tensor, 2)
         x = self.stft(x)
-        x = tf.abs(x)
+        x = self.magnitude(x)
         x = tf.squeeze(x, axis = -1) # Squeeze the channel dimension
         x = tf.matmul(x, self.linear_to_mel_weight_matrix)
         x = tf.math.log(x + self.log_offset)
